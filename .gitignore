@@ -1,0 +1,6 @@
+
+/*file config*/
+node_modules
+.env
+logs
+Dockerfile
