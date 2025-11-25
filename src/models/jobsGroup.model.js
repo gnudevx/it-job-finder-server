@@ -1,7 +1,10 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const jobItemSchema = new mongoose.Schema({
-  _id: { type: String, default: () => new mongoose.Types.ObjectId().toString() },
+  _id: {
+    type: String,
+    default: () => new mongoose.Types.ObjectId().toString(),
+  },
   title: String,
   link: String,
   location: String,
@@ -23,8 +26,8 @@ const jobsGroupSchema = new mongoose.Schema(
     group: { type: String, required: true },
     jobs: [jobItemSchema],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // tên collection là "jobs"
-export default mongoose.model("JobsGroup", jobsGroupSchema, "jobs");
+export default mongoose.model('JobsGroup', jobsGroupSchema, 'jobs');
