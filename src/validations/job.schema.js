@@ -36,4 +36,5 @@ export const jobSchema = z.object({
   quantity: z.number().optional(),
   experienceLevel: z.string().optional(),
   experience: z.string().optional(),
+  employer_id: z.string().optional(),
 });

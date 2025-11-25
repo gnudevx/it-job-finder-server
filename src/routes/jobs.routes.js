@@ -5,7 +5,7 @@ import { validateJob } from '../middlewares/job.validateJob.js';
 const router = express.Router();
 
 router.post('/create', validateJob, controller.createJob);
-
+router.get('/', controller.getAllJobsHistory);
 // GET /api/jobs  → lấy danh sách jobs
 router.get('/', async (req, res) => {
   try {

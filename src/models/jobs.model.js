@@ -44,8 +44,22 @@ const jobSchema = new mongoose.Schema(
     employer_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employer',
-      default: null,
+      default: new mongoose.Types.ObjectId('64e2b9b2d3f4a7c1e3b12345'),
     },
+    visibility: {
+      type: String,
+      enum: ['hidden', 'visible', 'expired'],
+      default: 'visible',
+    },
+    approvalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved',
+    },
+    service: { type: String, default: null },
+    latestDisplay: { type: String, default: null },
+    totalDisplay: { type: String, default: null },
+    display_expired_at: { type: Date, default: null },
   },
   { timestamps: true },
 );

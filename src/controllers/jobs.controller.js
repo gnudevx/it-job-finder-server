@@ -61,3 +61,22 @@ export const createJob = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getAllJobsHistory = async (req, res) => {
+  try {
+    const employerId = req.query.employer_id;
+
+    if (!employerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing employer_id',
+      });
+    }
+
+    const jobs = await Job.find({ employer_id: employerId }).lean();
+
+    res.json({ success: true, data: jobs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

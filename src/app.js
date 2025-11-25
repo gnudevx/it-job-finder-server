@@ -26,6 +26,7 @@ app.use(cookieParser());
 // ROUTER API
 app.use('/api/jobs', jobsRouter);
 app.use('/employer/api/jobs', jobsRouter);
+app.use('/employer/jobs', jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
 // ERROR HANDLER (sửa signature!)
