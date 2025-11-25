@@ -7,8 +7,9 @@ import { connectDB } from './config/db.js';
 import path from "path";
 import { fileURLToPath } from "url";
 
-import jobsRoutes from './routes/jobs.routes.js';
-import authRoutes from "./routes/auth.routes.js";
+import jobsRouter from './routes/jobs.routes.js';
+import locationRouter from './routes/employer/location.router.js';
+import SpecializationRouter from './routes/employer/specialization.router.js';import authRoutes from "./routes/auth.routes.js";
 
 import "./models/skill.model.js";
 import "./models/location.model.js";
@@ -24,11 +25,12 @@ connectDB();
 
 const app = express();
 
-// MIDDLEWARE ĐÚNG THỨ TỰ 
-app.use(cors({
-  origin: "http://localhost:3000",
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -37,9 +39,12 @@ app.use(cookieParser());
 
 // ROUTES
 app.use("/api/auth", authRoutes);
-app.use('/api/jobs', jobsRoutes);
-
+app.use('/api/jobs', jobsRouter);
+app.use('/employer/api/jobs', jobsRouter);
+app.use('/employer/api/locations', locationRouter);
+app.use('/employer/api/specialization', SpecializationRouter);
 // ERROR HANDLER
+// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({

@@ -1,0 +1,122 @@
+[
+  {
+    "code": "it-software",
+    "name": "IT - Phần mềm",
+    "domains": [
+      {
+        "code": "web-dev",
+        "name": "Lập trình Web (Frontend/Backend/Fullstack)"
+      },
+      {
+        "code": "mobile-dev",
+        "name": "Lập trình Di động (iOS/Android)"
+      },
+      {
+        "code": "game-dev",
+        "name": "Lập trình Game"
+      },
+      {
+        "code": "embedded",
+        "name": "Lập trình Nhúng (Embedded)"
+      },
+      {
+        "code": "ai-ml",
+        "name": "Trí tuệ nhân tạo (AI) & Machine Learning"
+      },
+      {
+        "code": "data-science",
+        "name": "Khoa học dữ liệu (Data Science)"
+      },
+      {
+        "code": "devops",
+        "name": "DevOps & CI/CD"
+      },
+      {
+        "code": "qa-qc",
+        "name": "Kiểm thử phần mềm (QA/QC/Tester)"
+      },
+      {
+        "code": "blockchain",
+        "name": "Blockchain"
+      },
+      {
+        "code": "erp-crm",
+        "name": "Hệ thống quản trị (ERP, CRM)"
+      }
+    ]
+  },
+  {
+    "code": "it-hardware",
+    "name": "IT - Phần cứng / Mạng",
+    "domains": [
+      {
+        "code": "network-infra",
+        "name": "Hạ tầng mạng & Server (System Admin)"
+      },
+      {
+        "code": "security",
+        "name": "An toàn thông tin & Bảo mật (Security)"
+      },
+      {
+        "code": "iot",
+        "name": "Internet vạn vật (IoT)"
+      },
+      {
+        "code": "telecom",
+        "name": "Viễn thông"
+      },
+      {
+        "code": "electronics",
+        "name": "Điện tử & Vi mạch"
+      },
+      {
+        "code": "hardware-maintenance",
+        "name": "Bảo trì & Sửa chữa phần cứng"
+      },
+      {
+        "code": "cloud-infra",
+        "name": "Điện toán đám mây (Cloud Infrastructure)"
+      }
+    ]
+  },
+  {
+    "code": "design",
+    "name": "Thiết kế & Sáng tạo",
+    "domains": [
+      {
+        "code": "ui-ux",
+        "name": "UI/UX Design"
+      },
+      {
+        "code": "graphic-design",
+        "name": "Thiết kế đồ họa (2D/3D)"
+      },
+      {
+        "code": "multimedia",
+        "name": "Đa phương tiện & Video Editor"
+      }
+    ]
+  },
+  {
+    "code": "business-development",
+    "name": "Kinh doanh & Phân tích",
+    "domains": [
+      {
+        "code": "ba",
+        "name": "Business Analyst (BA)"
+      },
+      {
+        "code": "da",
+        "name": "Data Analyst"
+      },
+      {
+        "code": "sales",
+        "name": "Bán hàng (Sales)"
+      },
+      {
+        "code": "marketing",
+        "name": "Marketing"
+      }
+    ]
+  }
+]
