@@ -53,7 +53,7 @@ export const getJobsGroup = async (req, res) => {
   }
 };
 
-export const createJob = async (req, res) => {
+export const createJob = async (req, res, next) => {
   try {
     const job = await jobService.createJobService(req.body);
     res.status(201).json({ success: true, job });
