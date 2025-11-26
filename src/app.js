@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
-
+import jobsRouter from './routes/jobs.routes.js';
+import locationRouter from './routes/employer/location.router.js';
+import SpecializationRouter from './routes/employer/specialization.router.js';
 dotenv.config();
 connectDB();
 
@@ -16,15 +18,20 @@ app.use(
     credentials: true,
   }),
 );
+
 app.use(express.json());
 app.use(helmet());
 app.use(cookieParser());
 
-// Router API
-// app.use('/api/users', verifyAccessToken, httpLogger, userRouter);
-
-app.use((err, res) => {
-  // middleware xử lý lỗi thực sự
+// ROUTER API
+app.use('/api/jobs', jobsRouter);
+app.use('/employer/api/jobs', jobsRouter);
+app.use('/employer/jobs', jobsRouter);
+app.use('/employer/api/locations', locationRouter);
+app.use('/employer/api/specialization', SpecializationRouter);
+// ERROR HANDLER (sửa signature!)
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({
     success: false,
