@@ -42,6 +42,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRouter);
 app.use('/employer/api/jobs', jobsRouter);
+app.use('/employer/jobs', jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
 // ERROR HANDLER

@@ -53,11 +53,45 @@ export const getJobsGroup = async (req, res) => {
   }
 };
 
-export const createJob = async (req, res) => {
+export const createJob = async (req, res, next) => {
   try {
     const job = await jobService.createJobService(req.body);
     res.status(201).json({ success: true, job });
   } catch (err) {
     next(err);
+  }
+};
+export const updateJob = async (req, res) => {
+  try {
+    const updatedJob = await Job.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!updatedJob) return res.status(404).json({ message: 'Job not found' });
+    res.json({
+      success: true,
+      job: updatedJob,
+      message: 'Cập nhật thành công',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Có lỗi xảy ra' });
+  }
+};
+export const getAllJobsHistory = async (req, res) => {
+  try {
+    const employerId = req.query.employer_id;
+
+    if (!employerId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Missing employer_id',
+      });
+    }
+
+    const jobs = await Job.find({ employer_id: employerId }).lean();
+
+    res.json({ success: true, data: jobs });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

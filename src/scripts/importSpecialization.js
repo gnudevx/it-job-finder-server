@@ -10,7 +10,7 @@ import Specialization from '../models/specialization.model.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 3. Đọc dữ liệu từ file JSON
+// 3. Đọc dữ liệu từ file JSONzz
 const dataPath = path.join(__dirname, './specializations.json');
 const data = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
 

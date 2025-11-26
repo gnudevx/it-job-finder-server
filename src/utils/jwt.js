@@ -24,18 +24,15 @@ export const generateRefreshToken = (user) => {
 export const verifyAccessToken = (token) => {
   try {
     return jwt.verify(token, ACCESS_TOKEN_SECRET);
-  } catch (err) {
-    console.log(err.ACCESS_TOKEN_SECRET);
+  } catch {
     return null;
   }
 };
 
-// VERIFY REFRESH TOKEN
 export const verifyRefreshToken = (token) => {
   try {
     return jwt.verify(token, REFRESH_TOKEN_SECRET);
-  } catch (err) {
-    console.log(err.ACCESS_TOKEN_SECRET);
+  } catch {
     return null;
   }
 };
