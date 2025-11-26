@@ -1,24 +1,23 @@
-import User from "../models/User.js";
-import { comparePassword, hashPassword } from "../utils/hash.js";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt.js";
-import { OAuth2Client } from "google-auth-library";
+import User from '../models/User.js';
+import { comparePassword, hashPassword } from '../utils/hash.js';
+import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
+import { OAuth2Client } from 'google-auth-library';
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  "postmessage"
+  'postmessage',
 );
 
 /* 1. LOGIN THƯỜNG */
 export const loginService = async ({ email, password }) => {
   const user = await User.findOne({ email });
-  if (!user) throw new Error("Email does not exist");
+  if (!user) throw new Error('Email does not exist');
 
-  if (!user.passwordHash)
-    throw new Error("This account uses Google login");
+  if (!user.passwordHash) throw new Error('This account uses Google login');
 
   const match = await comparePassword(password, user.passwordHash);
-  if (!match) throw new Error("Password is incorrect");
+  if (!match) throw new Error('Password is incorrect');
 
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
@@ -27,10 +26,10 @@ export const loginService = async ({ email, password }) => {
   await user.save();
 
   return {
-    message: "Login successfully",
+    message: 'Login successfully',
     accessToken,
     refreshToken,
-    user
+    user,
   };
 };
 
@@ -39,7 +38,7 @@ export const googleLoginService = async (code) => {
   // Step 1: Exchange code for tokens
   const { tokens } = await client.getToken({
     code,
-    redirect_uri: "postmessage",
+    redirect_uri: 'postmessage',
   });
 
   // Step 2: Verify ID Token to get user info
@@ -57,8 +56,8 @@ export const googleLoginService = async (code) => {
     user = await User.create({
       email,
       passwordHash: null,
-      role: "candidate",
-      status: "active",
+      role: 'candidate',
+      status: 'active',
     });
   }
 
@@ -72,7 +71,7 @@ export const googleLoginService = async (code) => {
 
   return {
     success: true,
-    message: "Google login successfully",
+    message: 'Google login successfully',
     accessToken,
     refreshToken,
     user,
@@ -87,10 +86,10 @@ export const registerService = async ({
   username,
 }) => {
   const emailExist = await User.findOne({ email });
-  if (emailExist) throw new Error("Email already exists");
+  if (emailExist) throw new Error('Email already exists');
 
   const usernameExist = await User.findOne({ username });
-  if (usernameExist) throw new Error("Username already exists");
+  if (usernameExist) throw new Error('Username already exists');
 
   const hashedPassword = await hashPassword(password);
 
@@ -104,6 +103,6 @@ export const registerService = async ({
   await user.save();
 
   return {
-    message: "Register successfully",
+    message: 'Register successfully',
   };
 };
