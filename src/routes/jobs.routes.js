@@ -97,7 +97,7 @@ router.get('/:id', async (req, res) => {
   try {
     const job = await Job.findById(req.params.id)
       .populate('location')
-      // .populate('skills')
+      .populate('skills')
       .populate('group_id');
 
     if (!job) return res.status(404).json({ message: 'Not found' });
