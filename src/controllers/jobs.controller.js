@@ -61,7 +61,22 @@ export const createJob = async (req, res, next) => {
     next(err);
   }
 };
-
+export const updateJob = async (req, res) => {
+  try {
+    const updatedJob = await Job.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    if (!updatedJob) return res.status(404).json({ message: 'Job not found' });
+    res.json({
+      success: true,
+      job: updatedJob,
+      message: 'Cập nhật thành công',
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Có lỗi xảy ra' });
+  }
+};
 export const getAllJobsHistory = async (req, res) => {
   try {
     const employerId = req.query.employer_id;

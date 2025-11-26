@@ -29,7 +29,7 @@ export const createJobService = async (form) => {
   // 3. Mapping tất cả dữ liệu FE → DB
   const jobData = {
     title: form.title,
-    description: form.jobDescription,
+    jobDescription: form.jobDescription,
     requirements: form.requirements?.split('\n') || [],
     benefits: form.benefits?.split('\n') || [],
     experience: form.experience,
@@ -45,7 +45,7 @@ export const createJobService = async (form) => {
       timeTo: form.workingTime?.timeTo || '',
     },
     jobType: form.jobType,
-    deadline: form.applicationDeadline,
+    applicationDeadline: form.applicationDeadline,
     quantity: form.quantity,
 
     province: form.province,
@@ -69,7 +69,6 @@ export const createJobService = async (form) => {
     receiverName: form.receiverName,
     receiverEmail: form.receiverEmail,
     receiverPhone: form.receiverPhone,
-    receiverAddress: form.receiverAddress,
     allowOnlineApply: form.allowOnlineApply,
     publishStatus: form.publishStatus,
     visibility: form.visibility,

@@ -37,6 +37,9 @@ export const jobSchema = z.object({
   experienceLevel: z.string().optional(),
   experience: z.string().optional(),
   employer_id: z.string().optional(),
+  receiverName: z.string().optional(),
+  receiverEmail: z.string().optional(),
+  receiverPhone: z.string().optional(),
   publishStatus: z
     .enum(['draft', 'pending', 'approved', 'rejected'])
     .optional(),
