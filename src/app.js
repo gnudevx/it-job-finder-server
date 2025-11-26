@@ -4,10 +4,23 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
+import path from "path";
+import { fileURLToPath } from "url";
+
 import jobsRouter from './routes/jobs.routes.js';
 import locationRouter from './routes/employer/location.router.js';
-import SpecializationRouter from './routes/employer/specialization.router.js';
-dotenv.config();
+import SpecializationRouter from './routes/employer/specialization.router.js';import authRoutes from "./routes/auth.routes.js";
+
+import "./models/skill.model.js";
+import "./models/location.model.js";
+import "./models/jobGroup.model.js";
+import "./models/jobs.model.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, "../.env") });
+
 connectDB();
 
 const app = express();
@@ -20,16 +33,18 @@ app.use(
 );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 app.use(cookieParser());
 
-// ROUTER API
+// ROUTES
+app.use("/api/auth", authRoutes);
 app.use('/api/jobs', jobsRouter);
 app.use('/employer/api/jobs', jobsRouter);
 app.use('/employer/jobs', jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
-// ERROR HANDLER (sửa signature!)
+// ERROR HANDLER
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);
