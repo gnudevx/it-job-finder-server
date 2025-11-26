@@ -19,10 +19,9 @@ export const createJobService = async (form) => {
   // 2. Lấy skills ObjectId
   const skillNames = [
     ...(form.domainKnowledge || []),
-    ...(form.languages?.map((l) => l.value) || []),
-    ...(form.softSkills || []),
-    ...(form.mustHaveSkills?.map((s) => s.value) || []),
-    ...(form.optionalSkills?.map((s) => s.value) || []),
+    ...(form.languages || []),
+    ...(form.mustHaveSkills || []),
+    ...(form.optionalSkills || []),
   ];
 
   const skills = await Skill.find({ name: { $in: skillNames } }).select('_id');
@@ -30,37 +29,50 @@ export const createJobService = async (form) => {
   // 3. Mapping tất cả dữ liệu FE → DB
   const jobData = {
     title: form.title,
-    description: form.jobDescription,
+    jobDescription: form.jobDescription,
     requirements: form.requirements?.split('\n') || [],
     benefits: form.benefits?.split('\n') || [],
     experience: form.experience,
+    experienceLevel: form.experienceLevel, // thêm
+    specialization: form.specialization, // nếu cần
+    level: form.level, // nếu cần
+    jobType: form.jobType,
     work_location_detail: form.address,
-    working_time: form.workingTime,
-    deadline: form.applicationDeadline,
+    working_time: {
+      dayFrom: form.workingTime?.dayFrom || '',
+      dayTo: form.workingTime?.dayTo || '',
+      timeFrom: form.workingTime?.timeFrom || '',
+      timeTo: form.workingTime?.timeTo || '',
+    },
+    jobType: form.jobType,
+    applicationDeadline: form.applicationDeadline,
+    quantity: form.quantity,
+
+    province: form.province,
+    district: form.district,
+    salaryFrom: form.salaryFrom,
+    salaryTo: form.salaryTo,
     salary_raw: form.salaryNegotiable
-      ? 'Thoả thuận'
+      ? 'Thỏa thuận'
       : `${form.salaryFrom}-${form.salaryTo}`,
-    salary_normalized: Number(form.salaryFrom) || 0,
-    currency_unit: 'VND',
+    currency_unit: form.salaryCurrency || 'VND',
     location: location._id,
     skills: skills.map((s) => s._id),
     ageRange: form.ageRange,
     education: form.education,
     gender: form.gender,
-    mustHaveSkills: form.mustHaveSkills?.map((s) => s.value) || [],
-    optionalSkills: form.optionalSkills?.map((s) => s.value) || [],
+    mustHaveSkills: form.mustHaveSkills || [],
+    optionalSkills: form.optionalSkills || [],
     domainKnowledge: form.domainKnowledge || [],
-    languages: form.languages?.map((l) => l.value) || [],
-    softSkills: form.softSkills || [],
+    languages: form.languages || [],
     portfolioRequired: form.portfolioRequired,
     receiverName: form.receiverName,
     receiverEmail: form.receiverEmail,
     receiverPhone: form.receiverPhone,
-    receiverAddress: form.receiverAddress,
     allowOnlineApply: form.allowOnlineApply,
-    employer_id: null,
+    publishStatus: form.publishStatus,
+    visibility: form.visibility,
     group_id: null,
   };
-
   return JobRepository.createJob(jobData);
 };
