@@ -51,9 +51,9 @@ const jobSchema = new mongoose.Schema(
       enum: ['hidden', 'visible', 'expired'],
       default: 'visible',
     },
-    approvalStatus: {
+    publishStatus: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['draft', 'pending', 'approved', 'rejected'],
       default: 'approved',
     },
     service: { type: String, default: null },

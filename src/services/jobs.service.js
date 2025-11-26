@@ -71,6 +71,8 @@ export const createJobService = async (form) => {
     receiverPhone: form.receiverPhone,
     receiverAddress: form.receiverAddress,
     allowOnlineApply: form.allowOnlineApply,
+    publishStatus: form.publishStatus,
+    visibility: form.visibility,
     group_id: null,
   };
   return JobRepository.createJob(jobData);

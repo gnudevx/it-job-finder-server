@@ -37,4 +37,8 @@ export const jobSchema = z.object({
   experienceLevel: z.string().optional(),
   experience: z.string().optional(),
   employer_id: z.string().optional(),
+  publishStatus: z
+    .enum(['draft', 'pending', 'approved', 'rejected'])
+    .optional(),
+  visibility: z.enum(['hidden', 'visible', 'expired']).optional(),
 });
