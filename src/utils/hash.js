@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+import bcrypt from 'bcryptjs';
 
 // Mã hóa password
 export const hashPassword = async (password) => {
