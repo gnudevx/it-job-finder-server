@@ -1,19 +1,27 @@
 import User from '../models/User.js';
-
-class UserService {
-  async updatePersonalInfo(userId, data) {
-    const { fullName, phone } = data;
-
-    const user = await User.findById(userId);
-    if (!user) throw new Error('User not found');
-
-    user.fullName = fullName;
-    user.phone = phone;
-
-    await user.save();
-
+import bcrypt from 'bcryptjs';
+export const userService = {
+  async getProfile(userId) {
+    const user = await User.findById(userId).select('-passwordHash');
+    if (!user) {
+      throw new Error('User not found');
+    }
     return user;
-  }
-}
+  },
+};
 
-export default new UserService();
+export const changePasswordService = async (userId, newPassword) => {
+  // Hash mật khẩu mới
+  const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+  // Cập nhật passwordHash
+  const user = await User.findByIdAndUpdate(
+    userId,
+    { passwordHash: hashedPassword },
+    { new: true },
+  );
+
+  if (!user) throw new Error('User not found');
+
+  return user;
+};

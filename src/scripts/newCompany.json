@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Công ty TNHH ABC",
+    "taxCode": "0312345678",
+    "website": "abc.vn",
+    "field": "it",
+    "industry": "Công nghệ thông tin",
+    "size": "small",
+    "address": "TP. Hồ Chí Minh",
+    "phone": "0901234567",
+    "email": "contact@abc.vn",
+    "description": "<p>Công ty chuyên về phần mềm và giải pháp IT.</p>",
+    "type": "enterprise",
+    "createdAt": "2025-11-26T21:45:00.000Z"
+  },
+  {
+    "name": "Công ty Cổ phần XYZ",
+    "taxCode": "0108765432",
+    "website": "xyz.com",
+    "field": "marketing",
+    "industry": "Marketing",
+    "size": "medium",
+    "address": "Hà Nội",
+    "phone": "0912345678",
+    "email": "info@xyz.com",
+    "description": "<p>Doanh nghiệp chuyên tư vấn marketing và truyền thông.</p>",
+    "type": "enterprise",
+    "createdAt": "2025-11-26T21:40:00.000Z"
+  },
+  {
+    "name": "HireIT Vietnam",
+    "taxCode": "0909988776",
+    "website": "hireit.vn",
+    "field": "it",
+    "industry": "Công nghệ thông tin",
+    "size": "small",
+    "address": "Đà Nẵng",
+    "phone": "0922334455",
+    "email": "contact@hireit.vn",
+    "description": "<p>Startup về tuyển dụng và IT solutions.</p>",
+    "type": "enterprise",
+    "createdAt": "2025-11-26T21:35:00.000Z"
+  },
+  {
+    "name": "Công ty TNHH Marketing Pro",
+    "taxCode": "0201234567",
+    "website": "marketingpro.vn",
+    "field": "marketing",
+    "industry": "Marketing",
+    "size": "small",
+    "address": "Hồ Chí Minh",
+    "phone": "0933445566",
+    "email": "hello@marketingpro.vn",
+    "description": "<p>Chuyên cung cấp dịch vụ marketing và quảng cáo.</p>",
+    "type": "enterprise",
+    "createdAt": "2025-11-26T21:30:00.000Z"
+  }
+]
