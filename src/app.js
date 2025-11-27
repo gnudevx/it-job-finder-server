@@ -11,7 +11,9 @@ import jobsRouter from './routes/jobs.routes.js';
 import locationRouter from './routes/employer/location.router.js';
 import SpecializationRouter from './routes/employer/specialization.router.js';
 import authRoutes from './routes/auth.routes.js';
-
+import employerSettingRouters from './routes/employer/setting.router.js';
+import { verifyAccessToken } from './middlewares/auth.middleware.js';
+import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
 import './models/skill.model.js';
 import './models/location.model.js';
 import './models/jobGroup.model.js';
@@ -41,10 +43,18 @@ app.use(cookieParser());
 // ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRouter);
+app.use(
+  '/employer/account/settings',
+  verifyAccessToken,
+  httpLogger,
+  employerSettingRouters,
+);
 app.use('/employer/api/jobs', jobsRouter);
 app.use('/employer/jobs', jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
+
+app.use(errorLogger);
 // ERROR HANDLER
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
