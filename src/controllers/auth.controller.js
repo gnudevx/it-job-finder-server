@@ -1,9 +1,9 @@
-import authService from '../services/auth.service.js';
+import { loginService, googleLoginService } from '../services/auth.service.js';
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const result = await authService.login(email, password);
+    const result = await loginService(email, password);
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -13,7 +13,7 @@ export const login = async (req, res) => {
 export const googleLogin = async (req, res) => {
   try {
     const { code } = req.body;
-    const result = await authService.googleLogin(code);
+    const result = await googleLoginService(code);
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });

@@ -11,6 +11,8 @@ import jobsRouter from './routes/jobs.routes.js';
 import locationRouter from './routes/employer/location.router.js';
 import SpecializationRouter from './routes/employer/specialization.router.js';
 import authRoutes from './routes/auth.routes.js';
+import userRoutes from './routes/user.routes.js';
+import candidateRoutes from './routes/candidate/candidate.routes.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -41,6 +43,8 @@ app.use(cookieParser());
 // ROUTES
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRouter);
+app.use('/api/user', userRoutes);
+app.use('/api/candidates', candidateRoutes);
 app.use('/employer/api/jobs', jobsRouter);
 app.use('/employer/jobs', jobsRouter);
 app.use('/employer/api/locations', locationRouter);

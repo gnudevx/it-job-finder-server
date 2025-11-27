@@ -5,7 +5,7 @@ export const getJobs = async (req, res) => {
   try {
     const jobs = await Job.find()
       .populate('location')
-      .populate('skills')
+      // .populate('skills')
       .populate('group_id')
       .populate('employer_id');
 
@@ -29,7 +29,7 @@ export const getJobsGroup = async (req, res) => {
     const jobs = await Job.find()
       .populate('group_id')
       .populate('location')
-      .populate('skills')
+      // .populate('skills')
       .populate('employer_id');
 
     const filtered = jobs.filter((job) => job.group_id?.group === groupName);

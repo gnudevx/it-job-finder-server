@@ -42,7 +42,7 @@ const jobSchema = new mongoose.Schema(
     group_id: { type: mongoose.Schema.Types.ObjectId, ref: 'JobGroup' },
     employer_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employer',
+      // ref: 'Employer',
       default: new mongoose.Types.ObjectId('64e2b9b2d3f4a7c1e3b12345'),
     },
     visibility: {
