@@ -12,6 +12,7 @@ import locationRouter from './routes/employer/location.router.js';
 import SpecializationRouter from './routes/employer/specialization.router.js';
 import authRoutes from './routes/auth.routes.js';
 import employerSettingRouters from './routes/employer/setting.router.js';
+import employerRouters from './routes/employer/employer.router.js';
 import { verifyAccessToken } from './middlewares/auth.middleware.js';
 import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
 import './models/skill.model.js';
@@ -48,6 +49,12 @@ app.use(
   verifyAccessToken,
   httpLogger,
   employerSettingRouters,
+);
+app.use(
+  '/employer/account/settings/personal',
+  verifyAccessToken,
+  httpLogger,
+  employerRouters,
 );
 app.use('/employer/api/jobs', jobsRouter);
 app.use('/employer/jobs', jobsRouter);
