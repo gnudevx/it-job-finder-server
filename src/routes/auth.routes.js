@@ -5,12 +5,14 @@ import {
   refreshTokenController,
 } from '../services/auth.service.js';
 import { login } from '../controllers/auth.controller.js';
+import { register } from '../controllers/auth.controller.js';
 
 dotenv.config();
 const router = express.Router();
 // LOGIN NORMAL
 router.post('/login', login);
 router.get('/refresh-token', refreshTokenController);
+router.post('/register', register);
 // GOOGLE LOGIN
 router.post('/google', async (req, res) => {
   try {

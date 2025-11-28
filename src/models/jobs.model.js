@@ -7,7 +7,7 @@ const jobSchema = new mongoose.Schema(
     location: { type: mongoose.Schema.Types.ObjectId, ref: 'Location' },
 
     experience: String,
-    jobDescription: String,
+    description: String,
     requirements: [String],
     benefits: [String],
     level: String,
@@ -63,4 +63,4 @@ const jobSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model('Jobs', jobSchema, 'jobs');
+export default mongoose.model('jobs', jobSchema, 'jobs');

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const jobSchema = z.object({
   title: z.string().min(2),
-  jobDescription: z.string(),
+  description: z.string(),
   requirements: z.string().optional(),
   benefits: z.string().optional(),
   level: z.string().optional(),
