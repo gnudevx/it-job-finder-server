@@ -1,4 +1,4 @@
-import { findEmployer } from '../services/employer.service.js';
+import { findEmployer, loadAllEmployer } from '../services/employer.service.js';
 import Employer from '../models/employer.model.js';
 export const getMe = async (req, res) => {
   try {
@@ -33,6 +33,16 @@ export const updatePersonalInfo = async (req, res) => {
     }
 
     return res.json({ message: 'Cập nhật thành công!', user: updated });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const AllEmployer = async (req, res) => {
+  try {
+    const data = await loadAllEmployer();
+    return res.json({ success: true, data });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });

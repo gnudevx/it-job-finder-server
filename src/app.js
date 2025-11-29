@@ -18,6 +18,7 @@ import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
 import userRoutes from './routes/user.routes.js';
 import candidateRoutes from './routes/candidate/candidate.routes.js';
 import favoritesRouter from './routes/candidate/favorites.routes.js';
+import managingRouter from './routes/admin/managing.routes.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -60,13 +61,15 @@ app.use(
   httpLogger,
   employerRouters,
 );
+app.use('/candidates', verifyAccessToken, httpLogger, candidateRoutes);
 app.use('/api/user', userRoutes);
-app.use('/api/candidates', candidateRoutes);
 app.use('/api/favorites', favoritesRouter);
+app.use('/employer', verifyAccessToken, httpLogger, employerRouters);
 app.use('/employer/api/jobs', jobsRouter);
 app.use('/employer/jobs', jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
+app.use('/admin/managing', verifyAccessToken, httpLogger, managingRouter);
 
 app.use(errorLogger);
 // ERROR HANDLER

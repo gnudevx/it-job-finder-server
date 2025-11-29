@@ -1,18 +1,26 @@
-import Candidate from '../models/candidate.model.js';
+import candidateService from '../services/candidate.service.js';
+
+export const loadAllCandidate = async (req, res) => {
+  try {
+    const data = await candidateService.loadAllCandidate();
+    return res.json({ success: true, data });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: 'Lỗi server', error: error.message });
+  }
+};
 
 export const getMyInfo = async (req, res) => {
   try {
     const userId = req.user.id;
+    const candidate = await candidateService.getMyInfo(userId);
 
-    const candidate = await Candidate.findOne({ userId });
     if (!candidate) {
       return res.status(404).json({ message: 'Không tìm thấy hồ sơ ứng viên' });
     }
 
-    return res.json({
-      success: true,
-      data: candidate,
-    });
+    return res.json({ success: true, data: candidate });
   } catch (error) {
     return res
       .status(500)
@@ -25,9 +33,7 @@ export const updateCandidate = async (req, res) => {
     const userId = req.user.id;
     const updates = req.body;
 
-    const candidate = await Candidate.findOneAndUpdate({ userId }, updates, {
-      new: true,
-    });
+    const candidate = await candidateService.updateCandidate(userId, updates);
 
     if (!candidate) {
       return res.status(404).json({ message: 'Không tìm thấy hồ sơ ứng viên' });

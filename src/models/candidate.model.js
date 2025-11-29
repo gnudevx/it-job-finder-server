@@ -6,9 +6,16 @@ const CandidateSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     phone: { type: String, default: '' },
 
-    skills: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Skill' }],
-    experienceYears: { type: Number, default: 0 },
-    resumeLink: { type: String, default: '' },
+    address: { type: String, default: '' },
+    birthday: { type: String, default: '' }, // hoặc type: Date nếu bạn muốn
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other'],
+      default: 'other',
+    },
+
+    avatar: { type: String, default: '' },
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
