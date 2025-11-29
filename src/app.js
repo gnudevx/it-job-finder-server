@@ -13,6 +13,7 @@ import SpecializationRouter from './routes/employer/specialization.router.js';
 import authRoutes from './routes/auth.routes.js';
 import employerSettingRouters from './routes/employer/setting.router.js';
 import employerRouters from './routes/employer/employer.router.js';
+import employerVerifyPhone from './routes/employer/verifyPhone.router.js';
 import { verifyAccessToken } from './middlewares/auth.middleware.js';
 import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
 import './models/skill.model.js';
@@ -43,7 +44,15 @@ app.use(cookieParser());
 
 // ROUTES
 app.use('/api/auth', authRoutes);
+
 app.use('/api/jobs', jobsRouter);
+
+app.use(
+  '/employer/account/',
+  verifyAccessToken,
+  httpLogger,
+  employerVerifyPhone,
+);
 app.use(
   '/employer/account/settings',
   verifyAccessToken,
@@ -61,6 +70,7 @@ app.use('/employer/jobs', jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
 
+app.use('/uploads', verifyAccessToken, httpLogger, express.static('uploads'));
 app.use(errorLogger);
 // ERROR HANDLER
 // eslint-disable-next-line no-unused-vars

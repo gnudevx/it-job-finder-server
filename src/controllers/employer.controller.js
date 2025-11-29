@@ -1,4 +1,7 @@
-import { findEmployer } from '../services/employer.service.js';
+import {
+  findEmployer,
+  updateLicenseService,
+} from '../services/employer.service.js';
 import Employer from '../models/employer.model.js';
 export const getMe = async (req, res) => {
   try {
@@ -36,5 +39,47 @@ export const updatePersonalInfo = async (req, res) => {
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const uploadLicenseController = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+
+    const fileUrl = `/uploads/licenses/${req.file.filename}`;
+
+    const updatedEmployer = await updateLicenseService(userId, fileUrl);
+
+    if (!updatedEmployer)
+      return res.status(404).json({ message: 'Không tìm thấy employer' });
+
+    res.json({
+      message: 'Upload license thành công',
+      license: updatedEmployer.license,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getLicenseInfo = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const employer = await Employer.findOne({ userId });
+
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer not found' });
+    }
+
+    res.json({
+      license: employer.license,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
   }
 };

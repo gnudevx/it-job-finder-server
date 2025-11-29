@@ -10,5 +10,4 @@ const router = express.Router();
 
 router.get('/', getMe);
 router.put('/', updatePersonalInfo);
-
 export default router;
