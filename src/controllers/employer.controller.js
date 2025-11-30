@@ -1,5 +1,6 @@
 import {
-  findEmployer, loadAllEmployer,
+  findEmployer,
+  loadAllEmployer,
   updateLicenseService,
 } from '../services/employer.service.js';
 import Employer from '../models/employer.model.js';
