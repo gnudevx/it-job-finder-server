@@ -15,11 +15,14 @@ import employerSettingRouters from './routes/employer/setting.router.js';
 import employerRouters from './routes/employer/employer.router.js';
 // import employerVerifyPhone from './routes/employer/verifyPhone.router.js';
 import { verifyAccessToken } from './middlewares/auth.middleware.js';
+import { verifyToken } from './middlewares/jwt.js';
 import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
 import userRoutes from './routes/user.routes.js';
 import candidateRoutes from './routes/candidate/candidate.routes.js';
 import favoritesRouter from './routes/candidate/favorites.routes.js';
 import managingRouter from './routes/admin/managing.routes.js';
+import applyJobRouter from './routes/candidate/applyJobs.routes.js';
+import resumeRouter from './routes/candidate/resume.routes.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -71,6 +74,13 @@ app.use(
   employerRouters,
 );
 app.use('/candidates', verifyAccessToken, httpLogger, candidateRoutes);
+app.use(
+  '/candidates/applications',
+  verifyToken, // dùng verifyToken để lấy req.user.id
+  httpLogger,
+  applyJobRouter,
+);
+app.use('/api/resumes', verifyAccessToken, resumeRouter);
 app.use('/api/user', userRoutes);
 app.use('/api/favorites', favoritesRouter);
 app.use('/employer', verifyAccessToken, httpLogger, employerRouters);
