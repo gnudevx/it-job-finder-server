@@ -55,12 +55,12 @@ app.use('/api/auth', authRoutes);
 
 app.use('/api/jobs', jobsRouter);
 
-// app.use(
-//   '/employer/account/',
-//   verifyAccessToken,
-//   httpLogger,
-//   employerVerifyPhone,
-// );
+app.use(
+  '/employer/account',
+  verifyAccessToken,
+  httpLogger,
+  employerVerifyPhone,
+);
 app.use(
   '/employer/account/settings',
   verifyAccessToken,

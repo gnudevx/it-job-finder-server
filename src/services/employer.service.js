@@ -31,6 +31,60 @@ export const updateLicenseService = async (userId, fileUrl) => {
   return employer;
 };
 
+export const verifyPhoneService = async (employerId, phone) => {
+  const normalized = phone.replace(/\D/g, '');
+
+  // Validate
+  if (normalized.length < 9 || normalized.length > 12) {
+    return { success: false, message: 'Số điện thoại không hợp lệ.' };
+  }
+
+  // Kiểm tra số đã được dùng nơi khác
+  const existing = await Employer.findOne({
+    phone: normalized,
+    _id: { $ne: employerId },
+  });
+
+  if (existing) {
+    return {
+      success: false,
+      message: 'Số điện thoại đã được nhà tuyển dụng khác xác thực.',
+    };
+  }
+
+  const employer = await Employer.findByIdAndUpdate(
+    employerId,
+    {
+      phone: normalized,
+      phoneVerified: true,
+    },
+    { new: true },
+  );
+
+  return {
+    success: true,
+    message: 'Số điện thoại đã được xác thực.',
+    employer,
+  };
+};
+
+export async function getEmployerProgressService(userId) {
+  // Tìm employer theo userId
+  const employer = await Employer.findOne({ userId }).populate('companyId');
+
+  if (!employer) {
+    return { success: false, message: 'Không tìm thấy employer' };
+  }
+
+  const steps = {
+    phoneVerified: employer.phoneVerified,
+    companyInfoUpdated: !!employer.companyId,
+    licenseUploaded: employer.license?.status === 'approved',
+  };
+
+  return { success: true, steps };
+}
+
 export const loadAllEmployer = async () => {
   return Employer.find()
     .populate('companyId') // populate các field cần thiết
