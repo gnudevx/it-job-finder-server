@@ -1,6 +1,8 @@
 import {
   findEmployer,
   updateLicenseService,
+  verifyPhoneService,
+  getEmployerProgressService,
 } from '../services/employer.service.js';
 import Employer from '../models/employer.model.js';
 export const getMe = async (req, res) => {
@@ -81,5 +83,57 @@ export const getLicenseInfo = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const verifyPhoneController = async (req, res) => {
+  try {
+    // Lấy user ID từ token
+    const employerUserId = req.user.userId;
+
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ message: 'Thiếu số điện thoại.' });
+    }
+
+    // Kiểm tra employer tồn tại
+    const employer = await Employer.findOne({ userId: employerUserId });
+    if (!employer) {
+      return res
+        .status(404)
+        .json({ message: 'Không tìm thấy nhà tuyển dụng.' });
+    }
+
+    // Gọi service
+    const result = await verifyPhoneService(employer._id, phone);
+
+    if (!result.success) {
+      return res.status(400).json({ message: result.message });
+    }
+
+    return res.json({
+      message: result.message,
+      employer: result.employer,
+    });
+  } catch (error) {
+    console.error('Verify phone error:', error);
+    return res.status(500).json({ message: 'Lỗi server.' });
+  }
+};
+
+export const getEmployerProgress = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await getEmployerProgressService(userId);
+
+    if (!result.success) {
+      return res.status(404).json({ message: result.message });
+    }
+
+    return res.json({ steps: result.steps });
+  } catch (err) {
+    console.error('getEmployerProgress error:', err);
+    res.status(500).json({ message: 'Lỗi server.' });
   }
 };

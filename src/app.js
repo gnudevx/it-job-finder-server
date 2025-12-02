@@ -48,7 +48,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRouter);
 
 app.use(
-  '/employer/account/',
+  '/employer/account',
   verifyAccessToken,
   httpLogger,
   employerVerifyPhone,
