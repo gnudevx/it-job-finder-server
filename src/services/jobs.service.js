@@ -12,6 +12,7 @@ export const getJobsByGroup = async (groupName) => {
 };
 
 export const createJobService = async (form) => {
+  console.log(form);
   // 1. Lấy ObjectId của location
   const location = await Location.findOne({ code: form.ward });
   if (!location) throw new Error('Invalid ward code');
@@ -29,7 +30,7 @@ export const createJobService = async (form) => {
   // 3. Mapping tất cả dữ liệu FE → DB
   const jobData = {
     title: form.title,
-    description: form.description,
+    jobDescription: form.jobDescription,
     requirements: form.requirements?.split('\n') || [],
     benefits: form.benefits?.split('\n') || [],
     experience: form.experience,

@@ -73,7 +73,7 @@ app.use(
   httpLogger,
   employerRouters,
 );
-app.use('/candidates', verifyAccessToken, httpLogger, candidateRoutes);
+app.use('/api/candidates', verifyAccessToken, httpLogger, candidateRoutes);
 app.use(
   '/candidates/applications',
   verifyToken, // dùng verifyToken để lấy req.user.id

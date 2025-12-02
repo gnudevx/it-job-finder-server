@@ -7,7 +7,7 @@ const jobSchema = new mongoose.Schema(
     location: { type: mongoose.Schema.Types.ObjectId, ref: 'Location' },
 
     experience: String,
-    description: String,
+    jobDescription: String,
     requirements: [String],
     benefits: [String],
     level: String,
