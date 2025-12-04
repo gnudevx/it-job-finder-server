@@ -13,7 +13,7 @@ import SpecializationRouter from './routes/employer/specialization.router.js';
 import authRoutes from './routes/auth.routes.js';
 import employerSettingRouters from './routes/employer/setting.router.js';
 import employerRouters from './routes/employer/employer.router.js';
-// import employerVerifyPhone from './routes/employer/verifyPhone.router.js';
+import employerVerifyPhone from './routes/employer/verifyPhone.router.js';
 import { verifyAccessToken } from './middlewares/auth.middleware.js';
 import { verifyToken } from './middlewares/jwt.js';
 import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
@@ -23,6 +23,7 @@ import favoritesRouter from './routes/candidate/favorites.routes.js';
 import managingRouter from './routes/admin/managing.routes.js';
 import applyJobRouter from './routes/candidate/applyJobs.routes.js';
 import resumeRouter from './routes/candidate/resume.routes.js';
+import employerApplicationsRouter from './routes/employer/application.router.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -72,6 +73,12 @@ app.use(
   verifyAccessToken,
   httpLogger,
   employerRouters,
+);
+app.use(
+  '/employer/api/applications',
+  verifyAccessToken,
+  httpLogger,
+  employerApplicationsRouter,
 );
 app.use('/api/candidates', verifyAccessToken, httpLogger, candidateRoutes);
 app.use(

@@ -24,6 +24,13 @@ const jobSchema = new mongoose.Schema(
     salaryTo: String,
     salary_raw: String,
     currency_unit: String,
+    skills: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Skill',
+        default: [],
+      },
+    ],
 
     ageRange: String,
     education: String,
