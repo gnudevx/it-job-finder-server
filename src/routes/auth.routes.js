@@ -12,6 +12,11 @@ const router = express.Router();
 // LOGIN NORMAL
 router.post('/login', login);
 router.get('/refresh-token', refreshTokenController);
+router.post('/logout', (req, res) => {
+  res.clearCookie('accessToken', { path: '/' });
+  res.clearCookie('refreshToken', { path: '/' });
+  res.json({ message: 'Logged out successfully' });
+});
 router.post('/register', register);
 // GOOGLE LOGIN
 router.post('/google', async (req, res) => {

@@ -1,6 +1,7 @@
 import JobsGroup from '../models/jobsGroup.model.js';
 import Location from '../models/location.model.js';
 import Skill from '../models/skill.model.js';
+import Jobs from '../models/jobs.model.js';
 import * as JobRepository from '../repositories/jobs.repository.js';
 
 export const getAllJobGroups = async () => {
@@ -11,8 +12,7 @@ export const getJobsByGroup = async (groupName) => {
   return await JobsGroup.findOne({ group: groupName });
 };
 
-export const createJobService = async (form) => {
-  console.log(form);
+export const createJobService = async (form, employerId) => {
   // 1. Lấy ObjectId của location
   const location = await Location.findOne({ code: form.ward });
   if (!location) throw new Error('Invalid ward code');
@@ -74,6 +74,67 @@ export const createJobService = async (form) => {
     publishStatus: form.publishStatus,
     visibility: form.visibility,
     group_id: null,
+    employer_id: employerId,
   };
   return JobRepository.createJob(jobData);
+};
+
+export const getAllJobsService = async () => {
+  // Lấy tất cả job, populate thông tin employer
+  const jobs = await Jobs.find({ publishStatus: { $ne: 'draft' } })
+    .populate({
+      path: 'employer_id',
+      select: 'fullName companyId',
+      populate: {
+        path: 'companyId',
+        select: 'name', // Lấy tên công ty
+      },
+    })
+    .lean();
+  return jobs;
+};
+
+export const getJobDetailService = async (jobId) => {
+  const job = await Jobs.findById(jobId)
+    .populate({
+      path: 'employer_id',
+      select: 'fullName companyId',
+      populate: {
+        path: 'companyId',
+        select: 'name', // lấy tên công ty
+      },
+    })
+    .populate('location', 'name code')
+    .lean();
+
+  if (!job) throw new Error('Job không tồn tại');
+  return job;
+};
+
+// Cập nhật trạng thái job (approve / reject / revoke)
+export const updateJobStatusService = async (jobId, newStatus) => {
+  if (!['pending', 'approved', 'rejected', 'draft'].includes(newStatus)) {
+    throw new Error('Trạng thái không hợp lệ');
+  }
+
+  const updateData = { publishStatus: newStatus };
+
+  // Nếu pending, đổi visibility thành visible
+  if (newStatus === 'approved') {
+    updateData.visibility = 'visible';
+  }
+
+  const job = await Jobs.findByIdAndUpdate(jobId, updateData, { new: true })
+    .populate({
+      path: 'employer_id',
+      select: 'fullName email companyId',
+      populate: {
+        path: 'companyId',
+        select: 'name',
+      },
+    })
+    .lean();
+
+  if (!job) throw new Error('Job không tồn tại');
+  return job;
 };
