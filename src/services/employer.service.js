@@ -1,4 +1,5 @@
 import Employer from '../models/employer.model.js';
+import Jobs from '../models/jobs.model.js';
 import fs from 'fs';
 
 export const findEmployer = async (userId) => {
@@ -83,4 +84,74 @@ export async function getEmployerProgressService(userId) {
   };
 
   return { success: true, steps };
+}
+export async function getAllEmployersService() {
+  // Lấy tất cả employer, populate user và company
+  const employers = await Employer.find()
+    .populate('userId') // lấy email, status, ...
+    .populate('companyId') // lấy name, logo, description, ...
+    .lean();
+  console.log('Employers:', employers);
+  return employers.map((e) => ({
+    id: e._id.toString(),
+
+    // Company / Contact
+    companyName: e.companyId?.name || 'Chưa cập nhật',
+    logoUrl: e.companyId?.logoUrl || '',
+    contactName: e.fullName || '',
+    email: e.userId?.email || '',
+    phone: e.phone || '',
+
+    // Package / Tier
+    tier: e.tier || 'FREE',
+
+    // Status -> lấy từ USER (userId)
+    status: (e.userId?.status || 'active').toUpperCase(),
+
+    // Credits
+    creditBalance: e.creditBalance ?? 0,
+
+    // Optional
+    joinedDate: e.createdAt ? e.createdAt.toISOString().slice(0, 10) : null,
+  }));
+}
+
+/** LẤY EMPLOYER THEO ID */
+export async function getEmployerByIdService(employerId) {
+  const employer = await Employer.findById(employerId)
+    .populate('companyId')
+    .populate('userId')
+    .lean();
+
+  if (!employer) return null;
+
+  const jobs = await Jobs.find({ employer_id: employer._id })
+    .sort({ createdAt: -1 })
+    .limit(4)
+    .lean();
+
+  return {
+    id: employer._id.toString(),
+    companyName: employer.companyId?.name || 'Chưa cập nhật',
+    userId: employer.userId._id.toString(),
+    logoUrl: employer.companyId?.logoUrl || '',
+    industry: employer.companyId?.industry || '',
+    joinedDate: employer.createdAt?.toISOString().slice(0, 10),
+    contactName: employer.fullName || '',
+    email: employer.userId?.email || '',
+    phone: employer.phone || '',
+    status: (employer.userId?.status || 'active').toUpperCase(),
+    tier: employer.tier || 'FREE',
+    creditBalance: employer.creditBalance ?? 0,
+    description: employer.companyId?.description || '',
+    avatar: employer.avatar || '',
+    address: employer.address || '',
+    jobs: jobs.map((j) => ({
+      id: j._id.toString(),
+      title: j.title,
+      postedDate: j.createdAt ? j.createdAt.toISOString().slice(0, 10) : null,
+      views: j.totalDisplay ?? 0,
+      status: j.publishStatus === 'approved' ? 'Open' : j.publishStatus,
+    })),
+  };
 }

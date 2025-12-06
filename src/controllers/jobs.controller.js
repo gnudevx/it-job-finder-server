@@ -1,5 +1,7 @@
 import Job from '../models/jobs.model.js';
 import * as jobService from '../services/jobs.service.js';
+import Employer from '../models/employer.model.js';
+
 // Lấy toàn bộ job (dạng phẳng)
 export const getJobs = async (req, res) => {
   try {
@@ -52,15 +54,25 @@ export const getJobsGroup = async (req, res) => {
     });
   }
 };
-
 export const createJob = async (req, res, next) => {
   try {
-    const job = await jobService.createJobService(req.body);
+    const employerUserId = req.user.userId; // 🔹 user id từ token
+    console.log('Employer User ID:', employerUserId);
+    // Kiểm tra employer tồn tại
+    const employer = await Employer.findOne({ userId: employerUserId });
+    console.log('Employer:', employer);
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer không tồn tại' });
+    }
+
+    // Gọi service tạo job, truyền employer._id
+    const job = await jobService.createJobService(req.body, employer._id);
     res.status(201).json({ success: true, job });
   } catch (err) {
     next(err);
   }
 };
+
 export const updateJob = async (req, res) => {
   try {
     const updatedJob = await Job.findByIdAndUpdate(req.params.id, req.body, {
