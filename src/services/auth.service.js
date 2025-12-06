@@ -117,7 +117,7 @@ export const refreshTokenController = async (req, res, next) => {
         httpOnly: true,
         secure: false,
         sameSite: 'Lax',
-        maxAge: 15 * 60 * 1000,
+        maxAge: 60 * 60 * 1000,
       });
 
       return res.status(200).json({ message: 'Refresh token successfully' });
