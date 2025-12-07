@@ -1,5 +1,6 @@
 import {
   findEmployer,
+  loadAllEmployer,
   updateLicenseService,
   verifyPhoneService,
   getEmployerProgressService,
@@ -196,5 +197,14 @@ export const checkJobLimit = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Có lỗi xảy ra' });
+  }
+};
+export const AllEmployer = async (req, res) => {
+  try {
+    const data = await loadAllEmployer();
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
   }
 };

@@ -5,6 +5,7 @@ import {
   refreshTokenController,
 } from '../services/auth.service.js';
 import { login } from '../controllers/auth.controller.js';
+import { register } from '../controllers/auth.controller.js';
 
 dotenv.config();
 const router = express.Router();
@@ -16,6 +17,7 @@ router.post('/logout', (req, res) => {
   res.clearCookie('refreshToken', { path: '/' });
   res.json({ message: 'Logged out successfully' });
 });
+router.post('/register', register);
 // GOOGLE LOGIN
 router.post('/google', async (req, res) => {
   try {

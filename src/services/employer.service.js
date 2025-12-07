@@ -155,3 +155,9 @@ export async function getEmployerByIdService(employerId) {
     })),
   };
 }
+
+export const loadAllEmployer = async () => {
+  return Employer.find()
+    .populate('companyId') // populate các field cần thiết
+    .exec();
+};

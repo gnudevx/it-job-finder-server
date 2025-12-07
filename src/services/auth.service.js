@@ -79,31 +79,25 @@ export const googleLoginService = async (code) => {
 };
 
 /* 3. REGISTER */
-export const registerService = async ({
-  email,
-  password,
-  fullname,
-  username,
-}) => {
+export const registerService = async ({ email, password, fullname }) => {
   const emailExist = await User.findOne({ email });
   if (emailExist) throw new Error('Email already exists');
 
-  const usernameExist = await User.findOne({ username });
-  if (usernameExist) throw new Error('Username already exists');
+  if (!fullname) throw new Error('Fullname is required');
 
   const hashedPassword = await hashPassword(password);
 
-  const user = new User({
+  const user = await User.create({
     email,
     passwordHash: hashedPassword,
     fullname,
-    username,
+    role: 'candidate',
+    status: 'active',
   });
-
-  await user.save();
 
   return {
     message: 'Register successfully',
+    user,
   };
 };
 
@@ -123,7 +117,7 @@ export const refreshTokenController = async (req, res, next) => {
         httpOnly: true,
         secure: false,
         sameSite: 'Lax',
-        maxAge: 15 * 60 * 1000,
+        maxAge: 60 * 60 * 1000,
       });
 
       return res.status(200).json({ message: 'Refresh token successfully' });

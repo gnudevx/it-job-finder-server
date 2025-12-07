@@ -3,6 +3,7 @@ import Job from '../models/jobs.model.js';
 import * as controller from '../controllers/jobs.controller.js';
 import { validateJob } from '../middlewares/job.validateJob.js';
 import Location from '../models/location.model.js';
+
 const router = express.Router();
 
 router.post('/create', validateJob, controller.createJob);
@@ -18,7 +19,7 @@ router.get('/edit/:id', async (req, res) => {
 
     if (!job) return res.status(404).json({ message: 'Not found' });
 
-    // Nếu location tồn tại
+    // Location handling...
     let province = '',
       district = '',
       ward = '';
@@ -40,7 +41,7 @@ router.get('/edit/:id', async (req, res) => {
           break;
       }
     }
-    // Trả về job kèm luôn 3 trường tiện dùng
+
     res.json({
       ...job.toObject(),
       province,
@@ -53,9 +54,9 @@ router.get('/edit/:id', async (req, res) => {
   }
 });
 
+// Request publish
 router.post('/request-publish', async (req, res) => {
   const { jobId } = req.body;
-
   try {
     const job = await Job.findById(jobId);
     if (!job)
@@ -80,27 +81,12 @@ router.post('/request-publish', async (req, res) => {
   }
 });
 
-// GET /api/jobs  → lấy danh sách jobs
-router.get('/', async (req, res) => {
-  try {
-    const jobs = await Job.find({})
-      .populate('location')
-      .populate('skills')
-      .populate('group_id');
-
-    res.json(jobs);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// GET /api/jobs/:id → xem chi tiết job
+// GET /api/jobs/:id → xem chi tiết job (public)
 router.get('/:id', async (req, res) => {
   try {
     const job = await Job.findById(req.params.id)
       .populate('location')
-      .populate('skills')
+      // .populate('skills')
       .populate('group_id');
 
     if (!job) return res.status(404).json({ message: 'Not found' });

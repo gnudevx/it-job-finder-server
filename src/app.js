@@ -15,7 +15,16 @@ import employerSettingRouters from './routes/employer/setting.router.js';
 import employerRouters from './routes/employer/employer.router.js';
 import employerVerifyPhone from './routes/employer/verifyPhone.router.js';
 import { verifyAccessToken } from './middlewares/auth.middleware.js';
+import { verifyToken } from './middlewares/jwt.js';
 import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
+import userRoutes from './routes/user.routes.js';
+import candidateRoutes from './routes/candidate/candidate.routes.js';
+import favoritesRouter from './routes/candidate/favorites.routes.js';
+import managingRouter from './routes/admin/managing.routes.js';
+import applyJobRouter from './routes/candidate/applyJobs.routes.js';
+import resumeRouter from './routes/candidate/resume.routes.js';
+import employerApplicationsRouter from './routes/employer/application.router.js';
+
 import employersupport from './routes/employer/support.router.js';
 import employerFeedback from './routes/employer/feedback.router.js';
 import adminLicense from './routes/admin/adminLicense.route.js';
@@ -85,10 +94,28 @@ app.use(
   httpLogger,
   employerRouters,
 );
+app.use(
+  '/employer/api/applications',
+  verifyAccessToken,
+  httpLogger,
+  employerApplicationsRouter,
+);
+app.use('/api/candidates', verifyAccessToken, httpLogger, candidateRoutes);
+app.use(
+  '/candidates/applications',
+  verifyToken, // dùng verifyToken để lấy req.user.id
+  httpLogger,
+  applyJobRouter,
+);
+app.use('/api/resumes', verifyAccessToken, resumeRouter);
+app.use('/api/user', userRoutes);
+app.use('/api/favorites', favoritesRouter);
+app.use('/employer', verifyAccessToken, httpLogger, employerRouters);
 app.use('/employer/api/jobs', verifyAccessToken, httpLogger, jobsRouter);
 app.use('/employer/jobs', verifyAccessToken, httpLogger, jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
+app.use('/admin/managing', verifyAccessToken, httpLogger, managingRouter);
 app.use(
   '/employer/system-notification',
   verifyAccessToken,

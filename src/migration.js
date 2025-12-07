@@ -55,7 +55,7 @@ for (const g of groups) {
       link: job.link,
       location: locationDoc._id,
       experience: String(job.experience),
-      description: job.description,
+      jobDescription: job.jobDescription,
       requirements: job.requirements?.split('\n') ?? [],
       benefits: job.benefits?.split('\n') ?? [],
       work_location_detail: job.work_location_detail,
