@@ -101,7 +101,7 @@ app.use(
   httpLogger,
   employerApplicationsRouter,
 );
-app.use('/api/candidates', verifyAccessToken, httpLogger, candidateRoutes);
+app.use('/candidates', verifyAccessToken, httpLogger, candidateRoutes);
 app.use(
   '/candidates/applications',
   verifyAccessToken, // dùng verifyToken để lấy req.user.id

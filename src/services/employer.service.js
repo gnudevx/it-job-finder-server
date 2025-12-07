@@ -135,7 +135,7 @@ export async function getEmployerByIdService(employerId) {
   const startOfMonth = moment().startOf('month').toDate();
   const endOfMonth = moment().endOf('month').toDate();
 
-  const jobCountThisMonth = await Job.countDocuments({
+  const jobCountThisMonth = await Jobs.countDocuments({
     employer_id: employer._id,
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
     publishStatus: { $in: ['approved', 'pending'] }, // chiếm slot

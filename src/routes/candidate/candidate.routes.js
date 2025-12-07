@@ -3,14 +3,13 @@ import {
   getMyInfo,
   updateCandidate,
 } from '../../controllers/candidate.controller.js';
-import { verifyToken } from '../../middlewares/jwt.js';
 
 const router = express.Router();
 
 // Lấy thông tin từ token
-router.get('/profile', verifyToken, getMyInfo);
+router.get('/profile', getMyInfo);
 
 // Cập nhật thông tin
-router.put('/profile', verifyToken, updateCandidate);
+router.put('/profile', updateCandidate);
 
 export default router;

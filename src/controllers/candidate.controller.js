@@ -42,7 +42,7 @@ export const getCandidateById = async (req, res) => {
 // Read my profile
 export const getMyInfo = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.user.userId;
     const candidate = await candidateService.getMyInfo(userId);
     if (!candidate) {
       return res.status(404).json({ message: 'Không tìm thấy hồ sơ ứng viên' });
