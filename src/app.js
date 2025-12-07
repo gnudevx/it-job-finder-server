@@ -107,14 +107,24 @@ app.use(
   httpLogger,
   applyJobRouter,
 );
-app.use('/api/resumes', verifyAccessToken, resumeRouter);
-app.use('/api/user', userRoutes);
-app.use('/api/favorites', favoritesRouter);
+app.use('/api/resumes', verifyAccessToken, httpLogger, resumeRouter);
+app.use('/api/user', verifyAccessToken, httpLogger, userRoutes);
+app.use('/api/favorites', verifyAccessToken, httpLogger, favoritesRouter);
 app.use('/employer', verifyAccessToken, httpLogger, employerRouters);
 app.use('/employer/api/jobs', verifyAccessToken, httpLogger, jobsRouter);
 app.use('/employer/jobs', verifyAccessToken, httpLogger, jobsRouter);
-app.use('/employer/api/locations', locationRouter);
-app.use('/employer/api/specialization', SpecializationRouter);
+app.use(
+  '/employer/api/locations',
+  verifyAccessToken,
+  httpLogger,
+  locationRouter,
+);
+app.use(
+  '/employer/api/specialization',
+  verifyAccessToken,
+  httpLogger,
+  SpecializationRouter,
+);
 app.use('/admin/managing', verifyAccessToken, httpLogger, managingRouter);
 app.use(
   '/employer/system-notification',

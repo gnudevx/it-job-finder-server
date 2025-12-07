@@ -11,6 +11,7 @@ router.get('/getHistoryEmployer', controller.getAllJobsHistory);
 router.put('/edit/:id', controller.updateJob);
 router.post('/:id/pause', controller.pauseJob);
 router.post('/:id/resume', controller.resumeJob);
+router.get('/', controller.getJobs);
 
 // GET /api/jobs/:id → xem chi tiết job
 router.get('/edit/:id', async (req, res) => {

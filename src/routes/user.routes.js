@@ -4,12 +4,11 @@ import {
   updatePersonalInfo,
   changePassword,
 } from '../controllers/user.controller.js';
-import { verifyToken } from '../middlewares/jwt.js';
 
 const router = express.Router();
 
-router.get('/personal-info', verifyToken, getPersonalInfo);
-router.put('/personal-info', verifyToken, updatePersonalInfo);
-router.put('/change-password', verifyToken, changePassword);
+router.get('/personal-info', getPersonalInfo);
+router.put('/personal-info', updatePersonalInfo);
+router.put('/change-password', changePassword);
 
 export default router;
