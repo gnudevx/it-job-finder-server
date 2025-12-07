@@ -15,7 +15,6 @@ import employerSettingRouters from './routes/employer/setting.router.js';
 import employerRouters from './routes/employer/employer.router.js';
 import employerVerifyPhone from './routes/employer/verifyPhone.router.js';
 import { verifyAccessToken } from './middlewares/auth.middleware.js';
-import { verifyToken } from './middlewares/jwt.js';
 import { httpLogger, errorLogger } from './middlewares/logger.middleware.js';
 import userRoutes from './routes/user.routes.js';
 import candidateRoutes from './routes/candidate/candidate.routes.js';
@@ -105,7 +104,7 @@ app.use(
 app.use('/api/candidates', verifyAccessToken, httpLogger, candidateRoutes);
 app.use(
   '/candidates/applications',
-  verifyToken, // dùng verifyToken để lấy req.user.id
+  verifyAccessToken, // dùng verifyToken để lấy req.user.id
   httpLogger,
   applyJobRouter,
 );
