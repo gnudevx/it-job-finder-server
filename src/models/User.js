@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, default: null },
+  fullname: { type: String, required: true }, // Add this field
   role: {
     type: String,
     enum: ['admin', 'candidate', 'employer'],

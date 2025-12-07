@@ -5,7 +5,7 @@ import { getJobLimitStatus } from '../services/jobLimitService.service.js';
 // Lấy toàn bộ job (dạng phẳng)
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find()
+    const jobs = await Job.find({ visibility: 'visible' })
       .populate('location')
       .populate('skills')
       .populate('group_id')

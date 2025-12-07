@@ -14,9 +14,9 @@ export const getAppliedByEmployer = async (req, res) => {
     if (!employer) {
       return res.status(404).json({ message: 'Employer not found' });
     }
-
+    const filters = req.query;
     // Lấy danh sách đơn apply
-    const applications = await getApplicationsByEmployer(employer._id);
+    const applications = await getApplicationsByEmployer(employer._id, filters);
 
     return res.status(200).json({
       success: true,
