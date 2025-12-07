@@ -1,7 +1,7 @@
 import Employer from '../models/employer.model.js';
 import Jobs from '../models/jobs.model.js';
 import fs from 'fs';
-
+import moment from 'moment';
 export const findEmployer = async (userId) => {
   const employer = await Employer.findOne({ userId });
   return employer; // chỉ trả về dữ liệu, không res.json ở đây
@@ -125,11 +125,26 @@ export async function getEmployerByIdService(employerId) {
 
   if (!employer) return null;
 
+  // --- Lấy tất cả jobs để hiển thị (giới hạn 4) ---
   const jobs = await Jobs.find({ employer_id: employer._id })
     .sort({ createdAt: -1 })
     .limit(4)
     .lean();
 
+  // --- Tính số job trong tháng hiện tại ---
+  const startOfMonth = moment().startOf('month').toDate();
+  const endOfMonth = moment().endOf('month').toDate();
+
+  const jobCountThisMonth = await Job.countDocuments({
+    employer_id: employer._id,
+    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+    publishStatus: { $in: ['approved', 'pending'] }, // chiếm slot
+    visibility: { $in: ['visible', 'hidden'] }, // optional: hidden cũng chiếm slot
+  });
+
+  const jobLimit = employer.maxPosts;
+
+  // --- Trả về kết quả kết hợp ---
   return {
     id: employer._id.toString(),
     companyName: employer.companyId?.name || 'Chưa cập nhật',
@@ -153,6 +168,11 @@ export async function getEmployerByIdService(employerId) {
       views: j.totalDisplay ?? 0,
       status: j.publishStatus === 'approved' ? 'Open' : j.publishStatus,
     })),
+    // --- Thêm thông tin số tin đăng ---
+    remaining: jobLimit - jobCountThisMonth,
+    limitReached: jobCountThisMonth >= jobLimit,
+    postedThisMonth: jobCountThisMonth,
+    maxPosts: jobLimit,
   };
 }
 

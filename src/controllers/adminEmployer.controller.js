@@ -4,6 +4,8 @@ import {
 } from '../services/employer.service.js';
 import User from '../models/User.js';
 import Employer from '../models/employer.model.js';
+import moment from 'moment';
+import Job from '../models/jobs.model.js';
 import { changePasswordService } from '../services/user.service.js';
 export const adminEmployerController = {
   getAll: async (req, res) => {
@@ -89,5 +91,41 @@ export const adminChangeEmployerPasswordController = async (req, res, next) => {
   } catch (err) {
     next(err);
     res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getAllEmployersWithJobLimit = async (req, res) => {
+  try {
+    const employers = await Employer.find()
+      .populate('userId', 'fullName email status') // lấy thông tin user
+      .lean();
+
+    const startOfMonth = moment().startOf('month').toDate();
+    const endOfMonth = moment().endOf('month').toDate();
+
+    const data = await Promise.all(
+      employers.map(async (employer) => {
+        const jobCountThisMonth = await Job.countDocuments({
+          employer_id: employer._id,
+          createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+          publishStatus: { $in: ['approved', 'pending'] }, // chiếm slot
+          visibility: { $in: ['visible', 'hidden'] }, // optional: hidden cũng chiếm slot
+        });
+
+        const remaining = employer.maxPosts - jobCountThisMonth;
+
+        return {
+          ...employer,
+          remaining,
+          limitReached: jobCountThisMonth >= employer.maxPosts,
+          postedThisMonth: jobCountThisMonth,
+        };
+      }),
+    );
+
+    return res.json({ success: true, data });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
   }
 };

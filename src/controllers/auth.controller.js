@@ -4,7 +4,7 @@ import {
   registerService,
 } from '../services/auth.service.js';
 import { changePasswordService } from '../services/user.service.js';
-import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
+import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 
 /* 1. LOGIN NORMAL */
 export const login = async (req, res, next) => {
@@ -18,6 +18,7 @@ export const login = async (req, res, next) => {
       throw new Error('Service không trả về token');
     }
 
+    // SET COOKIE
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false,
@@ -34,10 +35,7 @@ export const login = async (req, res, next) => {
       maxAge: 60 * 60 * 1000,
     });
 
-    return res.json({
-      success: true,
-      ...result,
-    });
+    return res.json(result);
   } catch (error) {
     next(error);
   }
@@ -48,32 +46,9 @@ export const googleLogin = async (req, res) => {
   try {
     const { code } = req.body;
     const result = await googleLoginService(code);
-
-    const { accessToken, refreshToken } = result;
-
-    // Set cookies for Google login too
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 1000,
-    });
-
     res.json(result);
   } catch (error) {
-    res.status(400).json({
-      success: false,
-      error: error.message,
-    });
+    res.status(400).json({ error: error.message });
   }
 };
 
@@ -83,16 +58,12 @@ export const changePasswordController = async (req, res, next) => {
     const { newPassword, reNewPassword } = req.body;
 
     if (newPassword !== reNewPassword)
-      return res.status(400).json({
-        success: false,
-        message: 'Passwords do not match',
-      });
+      return res.status(400).json({ message: 'Passwords do not match' });
 
     const userId = req.user.userId;
     const user = await changePasswordService(userId, newPassword);
 
     return res.json({
-      success: true,
       message: 'Password updated successfully',
       userId: user._id,
     });
@@ -102,37 +73,31 @@ export const changePasswordController = async (req, res, next) => {
 };
 
 /* 4. REGISTER + AUTO LOGIN */
-export const register = async (req, res) => {
+export const register = async (req, res, next) => {
   try {
-    const { email, password, fullname, role, gender } = req.body;
+    const { email, password, fullname } = req.body;
 
-    if (!email || !password || !fullname || !gender) {
-      return res.status(400).json({
-        success: false,
-        message: 'Missing required fields',
-      });
+    if (!email || !password || !fullname) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
 
     if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must be at least 6 chars',
-      });
+      return res
+        .status(400)
+        .json({ message: 'Password must be at least 6 chars' });
     }
 
-    const { user, candidate, employer } = await registerService({
+    const { user } = await registerService({
       email,
       password,
       fullname,
-      role: role || 'candidate',
-      gender,
     });
 
-    // AUTO LOGIN - Generate tokens
+    // AUTO LOGIN
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // Set cookies
+    // SET COOKIE
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: false,
@@ -149,61 +114,14 @@ export const register = async (req, res) => {
       maxAge: 60 * 60 * 1000,
     });
 
-    // Log for debugging
-    console.log('✅ Registration successful, tokens set for user:', user.email);
-    console.log('🔑 Access token expires in: 1 hour');
-    console.log('🔑 Refresh token expires in: 7 days');
-
     return res.status(201).json({
       success: true,
       message: 'Register successfully',
-      user: {
-        _id: user._id,
-        email: user.email,
-        fullname: user.fullname,
-        role: user.role,
-        status: user.status,
-      },
-      candidate: candidate || null,
-      employer: employer || null,
+      user,
       accessToken,
       refreshToken,
     });
   } catch (error) {
-    console.error('❌ Registration error:', error);
-    return res.status(400).json({
-      success: false,
-      message: error.message || 'Registration failed',
-    });
-  }
-};
-
-/* 5. LOGOUT */
-export const logout = async (req, res) => {
-  try {
-    // Clear cookies
-    res.clearCookie('accessToken', {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-    });
-
-    res.clearCookie('refreshToken', {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-    });
-
-    return res.json({
-      success: true,
-      message: 'Logged out successfully',
-    });
-  } catch (error) {
-    return res.status(400).json({
-      success: false,
-      message: error.message,
-    });
+    next(error);
   }
 };
