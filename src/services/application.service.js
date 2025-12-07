@@ -3,16 +3,77 @@ import Application from '../models/applications.model.js';
 import Jobs from '../models/jobs.model.js';
 import Employer from '../models/employer.model.js';
 
-export const getApplicationsByEmployer = async (employerId) => {
-  // 1. Lấy danh sách Job thuộc employer
-  const jobs = await Jobs.find({ employer_id: employerId }).select('_id');
+export const getApplicationsByEmployer = async (employerId, filters = {}) => {
+  const { q, campaign, status, range, appliedAt, toDate } = filters;
 
+  const jobs = await Jobs.find({ employer_id: employerId }).select('_id');
   if (!jobs.length) return [];
 
   const jobIds = jobs.map((job) => job._id);
 
-  // 2. Lấy tất cả đơn ứng tuyển vào các job đó
-  const applications = await Application.find({ jobId: { $in: jobIds } })
+  // ⭐ BUILD QUERY
+  let query = {
+    jobId: { $in: jobIds },
+  };
+
+  // Search theo ứng viên hoặc job title
+  if (q) {
+    query.$or = [
+      { 'candidateId.fullName': { $regex: q, $options: 'i' } },
+      { 'jobId.title': { $regex: q, $options: 'i' } },
+    ];
+  }
+
+  // Filter campaign
+  if (campaign) query.jobId = campaign;
+
+  // ⭐ FILTER STATUS (bạn đang thiếu)
+  if (status) query.status = status;
+
+  // TIME RANGE
+  if (range && range !== 'custom') {
+    const now = new Date();
+    let start, end;
+
+    switch (range) {
+      case 'today':
+        start = new Date(now.setHours(0, 0, 0, 0));
+        query.appliedAt = { $gte: start };
+        break;
+
+      case '7days':
+        start = new Date();
+        start.setDate(start.getDate() - 7);
+        query.appliedAt = { $gte: start };
+        break;
+
+      case '30days':
+        start = new Date();
+        start.setDate(start.getDate() - 30);
+        query.appliedAt = { $gte: start };
+        break;
+
+      case 'thisMonth':
+        start = new Date(now.getFullYear(), now.getMonth(), 1);
+        query.appliedAt = { $gte: start };
+        break;
+
+      case 'lastMonth':
+        start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        end = new Date(now.getFullYear(), now.getMonth(), 1);
+        query.appliedAt = { $gte: start, $lt: end };
+        break;
+    }
+  }
+
+  if (range === 'custom' && appliedAt && toDate) {
+    query.appliedAt = {
+      $gte: new Date(appliedAt),
+      $lte: new Date(toDate + 'T23:59:59'),
+    };
+  }
+
+  const applications = await Application.find(query)
     .populate({
       path: 'jobId',
       populate: [
@@ -23,10 +84,7 @@ export const getApplicationsByEmployer = async (employerId) => {
     .populate({
       path: 'candidateId',
       model: 'Candidate',
-      populate: {
-        path: 'userId',
-        model: 'USER',
-      },
+      populate: { path: 'userId', model: 'USER' },
     })
     .populate({
       path: 'resumeId',

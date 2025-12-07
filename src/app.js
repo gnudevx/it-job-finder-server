@@ -33,6 +33,8 @@ import AdminEmployer from './routes/admin/adminEmployer.js';
 import AdminNotification from './routes/notification.router.js';
 import EmployerNotification from './routes/employer/notificationEmployer.router.js';
 import adminTickets from './routes/admin/adminTickets.route.js';
+import dashboardRoutes from './routes/admin/adminDashboard.routes.js';
+
 import './models/skill.model.js';
 import './models/location.model.js';
 import './models/jobGroup.model.js';
@@ -143,6 +145,7 @@ app.use(
   httpLogger,
   AdminNotification,
 );
+app.use('/admin/dashboard', dashboardRoutes);
 
 app.use('/uploads', verifyAccessToken, httpLogger, express.static('uploads'));
 app.use(errorLogger);
