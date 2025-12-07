@@ -2,8 +2,7 @@ import mongoose from 'mongoose';
 
 const tierConfig = {
   FREE: { maxPosts: 3 },
-  STANDARD: { maxPosts: 10 },
-  PREMIUM: { maxPosts: 50 },
+  PRO: { maxPosts: 50 },
   ENTERPRISE: { maxPosts: 100 },
 };
 const employerSchema = new mongoose.Schema({
@@ -43,6 +42,7 @@ const employerSchema = new mongoose.Schema({
       return tierConfig[this.tier]?.maxPosts ?? 3;
     },
   },
+  lastPostAt: { type: Date, default: null }, // ngày đăng tin gần nhất
   address: { type: String, default: '' },
   avatar: { type: String, default: '' },
 

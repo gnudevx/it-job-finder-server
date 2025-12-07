@@ -51,7 +51,7 @@ const jobSchema = new mongoose.Schema(
     },
     publishStatus: {
       type: String,
-      enum: ['draft', 'pending', 'approved', 'rejected'],
+      enum: ['draft', 'pending', 'approved', 'rejected', 'paused'],
       default: 'pending',
     },
     service: { type: String, default: null },

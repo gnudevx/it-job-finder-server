@@ -86,7 +86,7 @@ app.use(
   employerRouters,
 );
 app.use('/employer/api/jobs', verifyAccessToken, httpLogger, jobsRouter);
-app.use('/employer/jobs', jobsRouter);
+app.use('/employer/jobs', verifyAccessToken, httpLogger, jobsRouter);
 app.use('/employer/api/locations', locationRouter);
 app.use('/employer/api/specialization', SpecializationRouter);
 app.use(

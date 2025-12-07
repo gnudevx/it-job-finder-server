@@ -6,8 +6,11 @@ import Location from '../models/location.model.js';
 const router = express.Router();
 
 router.post('/create', validateJob, controller.createJob);
-router.get('/', controller.getAllJobsHistory);
+router.get('/getHistoryEmployer', controller.getAllJobsHistory);
 router.put('/edit/:id', controller.updateJob);
+router.post('/:id/pause', controller.pauseJob);
+router.post('/:id/resume', controller.resumeJob);
+
 // GET /api/jobs/:id → xem chi tiết job
 router.get('/edit/:id', async (req, res) => {
   try {

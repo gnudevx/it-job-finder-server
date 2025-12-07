@@ -6,6 +6,7 @@ import {
 } from '../services/employer.service.js';
 import Employer from '../models/employer.model.js';
 import User from '../models/User.js';
+import { getJobLimitStatus } from '../services/jobLimitService.service.js';
 export const getEmployersController = async (req, res) => {
   try {
     const { search = '', status = 'all' } = req.query;
@@ -186,5 +187,14 @@ export const getEmployerProgress = async (req, res) => {
   } catch (err) {
     console.error('getEmployerProgress error:', err);
     res.status(500).json({ message: 'Lỗi server.' });
+  }
+};
+export const checkJobLimit = async (req, res) => {
+  try {
+    const data = await getJobLimitStatus(req.user.userId);
+    res.status(200).json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Có lỗi xảy ra' });
   }
 };
