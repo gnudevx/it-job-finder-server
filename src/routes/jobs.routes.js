@@ -3,7 +3,7 @@ import Job from '../models/jobs.model.js';
 import * as controller from '../controllers/jobs.controller.js';
 import { validateJob } from '../middlewares/job.validateJob.js';
 import Location from '../models/location.model.js';
-
+import { getJobLimitStatus } from '../services/jobLimitService.service.js';
 const router = express.Router();
 
 router.post('/create', validateJob, controller.createJob);
@@ -58,13 +58,16 @@ router.get('/edit/:id', async (req, res) => {
 // Request publish
 router.post('/request-publish', async (req, res) => {
   const { jobId } = req.body;
+
   try {
     const job = await Job.findById(jobId);
-    if (!job)
+    if (!job) {
       return res
         .status(404)
         .json({ success: false, message: 'Job không tồn tại' });
+    }
 
+    // Chỉ cho yêu cầu từ nháp
     if (job.publishStatus !== 'draft') {
       return res.status(400).json({
         success: false,
@@ -72,6 +75,16 @@ router.post('/request-publish', async (req, res) => {
       });
     }
 
+    // --- Kiểm tra hạn mức ---
+    const limitStatus = await getJobLimitStatus(req.user.userId);
+    if (limitStatus.limitReached) {
+      return res.status(400).json({
+        success: false,
+        message: 'Bạn đã đạt hạn mức tin đăng trong tháng này',
+      });
+    }
+
+    // --- Chuyển trạng thái sang pending ---
     job.publishStatus = 'pending';
     await job.save();
 

@@ -3,11 +3,12 @@ import {
   adminEmployerController,
   updateEmployerStatus,
   adminChangeEmployerPasswordController,
+  getAllEmployersWithJobLimit,
 } from '../../controllers/adminEmployer.controller.js';
-
 const router = express.Router();
 
 router.get('/employers', adminEmployerController.getAll);
+router.get('/getAllEmployersWithJobLimit', getAllEmployersWithJobLimit);
 router.get('/employers/:id', adminEmployerController.getById);
 router.patch('/employers/:id/status', updateEmployerStatus);
 router.patch(

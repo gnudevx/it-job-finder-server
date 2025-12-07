@@ -16,6 +16,8 @@ export const getJobLimitStatus = async (employerUserId) => {
   const jobCountThisMonth = await Job.countDocuments({
     employer_id: employer._id,
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+    publishStatus: { $in: ['approved', 'pending'] }, // chiếm slot
+    visibility: { $in: ['visible', 'hidden'] }, // optional: hidden cũng chiếm slot
   });
 
   const jobLimit = employer.maxPosts;
