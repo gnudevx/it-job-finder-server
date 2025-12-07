@@ -2,6 +2,7 @@ import JobsGroup from '../models/jobsGroup.model.js';
 import Location from '../models/location.model.js';
 import Skill from '../models/skill.model.js';
 import Jobs from '../models/jobs.model.js';
+import Employer from '../models/employer.model.js';
 import * as JobRepository from '../repositories/jobs.repository.js';
 
 export const getAllJobGroups = async () => {
@@ -13,70 +14,100 @@ export const getJobsByGroup = async (groupName) => {
 };
 
 export const createJobService = async (form, employerId) => {
-  // 1. Lấy ObjectId của location
-  const location = await Location.findOne({ code: form.ward });
-  if (!location) throw new Error('Invalid ward code');
+  try {
+    // 1. Lấy ObjectId của location
+    const location = await Location.findOne({ code: form.ward });
+    if (!location) throw new Error('Invalid ward code');
 
-  // 2. Lấy skills ObjectId
-  const skillNames = [
-    ...(form.domainKnowledge || []),
-    ...(form.languages || []),
-    ...(form.mustHaveSkills || []),
-    ...(form.optionalSkills || []),
-  ];
+    // 2. Lấy skills ObjectId
+    const skillNames = [
+      ...(form.domainKnowledge || []),
+      ...(form.languages || []),
+      ...(form.mustHaveSkills || []),
+      ...(form.optionalSkills || []),
+    ];
 
-  const skills = await Skill.find({ name: { $in: skillNames } }).select('_id');
+    const skills = await Skill.find({ name: { $in: skillNames } }).select(
+      '_id',
+    );
 
-  // 3. Mapping tất cả dữ liệu FE → DB
-  const jobData = {
-    title: form.title,
-    jobDescription: form.jobDescription,
-    requirements: form.requirements?.split('\n') || [],
-    benefits: form.benefits?.split('\n') || [],
-    experience: form.experience,
-    experienceLevel: form.experienceLevel, // thêm
-    specialization: form.specialization, // nếu cần
-    level: form.level, // nếu cần
-    jobType: form.jobType,
-    work_location_detail: form.address,
-    working_time: {
-      dayFrom: form.workingTime?.dayFrom || '',
-      dayTo: form.workingTime?.dayTo || '',
-      timeFrom: form.workingTime?.timeFrom || '',
-      timeTo: form.workingTime?.timeTo || '',
-    },
-    jobType: form.jobType,
-    applicationDeadline: form.applicationDeadline,
-    quantity: form.quantity,
+    // 3. Mapping tất cả dữ liệu FE → DB
+    const jobData = {
+      title: form.title,
+      jobDescription: form.jobDescription,
+      requirements: form.requirements?.split('\n') || [],
+      benefits: form.benefits?.split('\n') || [],
+      experience: form.experience,
+      experienceLevel: form.experienceLevel, // thêm
+      specialization: form.specialization, // nếu cần
+      level: form.level, // nếu cần
+      jobType: form.jobType, // Chỉ giữ một lần
+      work_location_detail: form.address,
+      working_time: {
+        dayFrom: form.workingTime?.dayFrom || '',
+        dayTo: form.workingTime?.dayTo || '',
+        timeFrom: form.workingTime?.timeFrom || '',
+        timeTo: form.workingTime?.timeTo || '',
+      },
+      applicationDeadline: form.applicationDeadline,
+      quantity: form.quantity,
+      province: form.province,
+      district: form.district,
+      salaryFrom: form.salaryFrom,
+      salaryTo: form.salaryTo,
+      salary_raw: form.salaryNegotiable
+        ? 'Thỏa thuận'
+        : `${form.salaryFrom}-${form.salaryTo}`,
+      currency_unit: form.salaryCurrency || 'VND',
+      location: location._id,
+      skills: skills.map((s) => s._id),
+      ageRange: form.ageRange,
+      education: form.education,
+      gender: form.gender,
+      mustHaveSkills: form.mustHaveSkills || [],
+      optionalSkills: form.optionalSkills || [],
+      domainKnowledge: form.domainKnowledge || [],
+      languages: form.languages || [],
+      portfolioRequired: form.portfolioRequired,
+      receiverName: form.receiverName,
+      receiverEmail: form.receiverEmail,
+      receiverPhone: form.receiverPhone,
+      allowOnlineApply: form.allowOnlineApply,
+      publishStatus: form.publishStatus || 'draft', // Mặc định là 'draft'
+      visibility: form.visibility || 'hidden', // Mặc định là 'hidden'
+      group_id: null,
+      employer_id: employerId,
+    };
 
-    province: form.province,
-    district: form.district,
-    salaryFrom: form.salaryFrom,
-    salaryTo: form.salaryTo,
-    salary_raw: form.salaryNegotiable
-      ? 'Thỏa thuận'
-      : `${form.salaryFrom}-${form.salaryTo}`,
-    currency_unit: form.salaryCurrency || 'VND',
-    location: location._id,
-    skills: skills.map((s) => s._id),
-    ageRange: form.ageRange,
-    education: form.education,
-    gender: form.gender,
-    mustHaveSkills: form.mustHaveSkills || [],
-    optionalSkills: form.optionalSkills || [],
-    domainKnowledge: form.domainKnowledge || [],
-    languages: form.languages || [],
-    portfolioRequired: form.portfolioRequired,
-    receiverName: form.receiverName,
-    receiverEmail: form.receiverEmail,
-    receiverPhone: form.receiverPhone,
-    allowOnlineApply: form.allowOnlineApply,
-    publishStatus: form.publishStatus,
-    visibility: form.visibility,
-    group_id: null,
-    employer_id: employerId,
-  };
-  return JobRepository.createJob(jobData);
+    // 1️⃣ Lấy thông tin employer
+    const employer = await Employer.findById(employerId);
+    if (!employer) throw new Error('Employer không tồn tại');
+
+    // 2️⃣ Kiểm tra hạn mức gói FREE
+    const now = new Date();
+
+    // 3️⃣ Set thời gian hết hạn dựa trên gói
+    const packageConfig = {
+      FREE: 30,
+      PRO: 45,
+      ENTERPRISE: 365,
+    };
+
+    jobData.display_expired_at = new Date(
+      now.getTime() + packageConfig[employer.tier] * 24 * 60 * 60 * 1000,
+    );
+
+    // 4️⃣ Update employer monthlyPosts & lastPostAt
+    employer.lastPostAt = now;
+    await employer.save();
+
+    return JobRepository.createJob(jobData);
+  } catch (error) {
+    console.error(error);
+    throw new Error(
+      error.message || 'Đã xảy ra lỗi trong quá trình tạo công việc.',
+    );
+  }
 };
 
 export const getAllJobsService = async () => {

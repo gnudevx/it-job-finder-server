@@ -7,16 +7,13 @@ import Location from '../models/location.model.js';
 const router = express.Router();
 
 router.post('/create', validateJob, controller.createJob);
-
-// ❗ moved: Employer history API
-router.get('/history', controller.getAllJobsHistory);
-
-// ✔ dùng đúng controller để lấy toàn bộ job
+router.get('/getHistoryEmployer', controller.getAllJobsHistory);
+router.put('/edit/:id', controller.updateJob);
+router.post('/:id/pause', controller.pauseJob);
+router.post('/:id/resume', controller.resumeJob);
 router.get('/', controller.getJobs);
 
-router.put('/edit/:id', controller.updateJob);
-
-// GET /api/jobs/edit/:id → xem chi tiết job (employer dùng)
+// GET /api/jobs/:id → xem chi tiết job
 router.get('/edit/:id', async (req, res) => {
   try {
     const job = await Job.findById(req.params.id).populate('location');
