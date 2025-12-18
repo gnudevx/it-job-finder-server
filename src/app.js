@@ -33,6 +33,7 @@ import AdminNotification from './routes/notification.router.js';
 import EmployerNotification from './routes/employer/notificationEmployer.router.js';
 import adminTickets from './routes/admin/adminTickets.route.js';
 import dashboardRoutes from './routes/admin/adminDashboard.routes.js';
+import payment from './routes/employer/payments.router.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -64,6 +65,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 
 app.use('/api/jobs', jobsRouter);
+app.use('/api/payments', payment);
 
 app.use(
   '/employer/account',

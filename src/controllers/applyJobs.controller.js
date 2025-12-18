@@ -13,7 +13,7 @@ export const applyJobController = async (req, res) => {
     }
 
     // Lấy userId từ JWT (req.user.id)
-    const userId = req.user.id;
+    const userId = req.user.userId;
 
     // Tìm candidate dựa vào userId
     const candidate = await Candidate.findOne({ userId });

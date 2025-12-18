@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const tierConfig = {
   FREE: { maxPosts: 3 },
-  PRO: { maxPosts: 50 },
+  PRO: { maxPosts: 10 },
   ENTERPRISE: { maxPosts: 100 },
 };
 const employerSchema = new mongoose.Schema({
@@ -45,7 +45,10 @@ const employerSchema = new mongoose.Schema({
   lastPostAt: { type: Date, default: null }, // ngày đăng tin gần nhất
   address: { type: String, default: '' },
   avatar: { type: String, default: '' },
-
+  subscriptionExpiresAt: {
+    type: Date,
+    default: null,
+  },
   createdAt: { type: Date, default: Date.now },
 });
 employerSchema.pre('save', function (next) {
