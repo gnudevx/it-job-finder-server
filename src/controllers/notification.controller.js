@@ -1,6 +1,7 @@
 import Notification from '../models/notification.model.js';
 import NotificationRead from '../models/NotificationReadSchema.model.js';
 import Employer from '../models/employer.model.js';
+import Candidate from '../models/candidate.model.js';
 export const NotificationController = {
   /** ============================
    *  ADMIN CREATE NOTIFICATION
@@ -148,6 +149,59 @@ export const NotificationController = {
     }
   },
 
+  async candidateList(req, res) {
+    try {
+      const userId = req.user.userId;
+      const role = req.user.role.toUpperCase();
+      const candidate = await Candidate.findOne({ userId });
+      if (!candidate)
+        return res.status(404).json({ message: 'Candidate not found' });
+
+      const candidateId = candidate._id.toString();
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const skip = (page - 1) * limit;
+
+      const filter = {
+        $or: [
+          { recipientId: null },
+          { recipientId: 'ALL' },
+          { recipientId: candidateId },
+        ],
+        recipientRole: role,
+      };
+
+      const totalItems = await Notification.countDocuments(filter);
+
+      const notifications = await Notification.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit);
+
+      // Lấy danh sách đã đọc
+      const readStates = await NotificationRead.find({
+        userId,
+        notificationId: { $in: notifications.map((n) => n._id) },
+      });
+
+      const readMap = new Set(readStates.map((r) => String(r.notificationId)));
+
+      const items = notifications.map((n) => ({
+        ...n.toObject(),
+        isRead: readMap.has(String(n._id)),
+      }));
+
+      return res.json({
+        items,
+        totalItems,
+        totalPages: Math.ceil(totalItems / limit),
+        currentPage: page,
+      });
+    } catch (e) {
+      return res.status(500).json({ message: e.message });
+    }
+  },
+
   /** ============================
    *  GET DETAIL
    * ============================ */
@@ -192,6 +246,69 @@ export const getEmployerNotifications = async (req, res) => {
     const filter = {
       recipientRole: role,
       recipientId: employerId, // gửi riêng cho user này
+    };
+
+    // Lấy tổng
+    const totalItems = await Notification.countDocuments(filter);
+
+    // Lấy danh sách
+    const notifications = await Notification.find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
+    // Lấy trạng thái đã đọc
+    const readStates = await NotificationRead.find({
+      userId,
+      notificationId: { $in: notifications.map((n) => n._id) },
+    });
+
+    const readSet = new Set(readStates.map((r) => String(r.notificationId)));
+
+    const items = notifications.map((n) => ({
+      id: n._id,
+      title: n.title,
+      message: n.message,
+      type: n.type,
+      recipientId: n.recipientId,
+      recipientRole: n.recipientRole,
+      sentAt: n.createdAt,
+      isRead: readSet.has(String(n._id)),
+    }));
+
+    return res.json({
+      page,
+      limit,
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      items,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getCandidateNotifications = async (req, res) => {
+  try {
+    const userId = req.user.userId; // lấy từ token
+    const role = req.user.role.toUpperCase();
+    console.log('User ID:', userId);
+    console.log('Role:', role);
+    const candidate = await Candidate.findOne({ userId });
+    if (!candidate)
+      return res.status(404).json({ message: 'Candidate not found' });
+
+    const candidateId = candidate._id.toString();
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Lọc notification cho user này
+    const filter = {
+      recipientRole: role,
+      recipientId: candidateId, // gửi riêng cho user này
     };
 
     // Lấy tổng

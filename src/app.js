@@ -31,6 +31,7 @@ import AdminJob from './routes/admin/adminJob.route.js';
 import AdminEmployer from './routes/admin/adminEmployer.js';
 import AdminNotification from './routes/notification.router.js';
 import EmployerNotification from './routes/employer/notificationEmployer.router.js';
+import CandidateNotification from './routes/candidate/notificationCandidate.router.js';
 import adminTickets from './routes/admin/adminTickets.route.js';
 import dashboardRoutes from './routes/admin/adminDashboard.routes.js';
 import payment from './routes/employer/payments.router.js';
@@ -135,7 +136,12 @@ app.use(
   httpLogger,
   EmployerNotification,
 );
-
+app.use(
+  '/candidate/system-notification',
+  verifyAccessToken,
+  httpLogger,
+  CandidateNotification,
+);
 app.use('/admin/', verifyAccessToken, httpLogger, AdminJob);
 app.use('/admin/manage', verifyAccessToken, httpLogger, AdminEmployer);
 app.use(
