@@ -1,5 +1,4 @@
 import express from 'express';
-import { verifyToken } from '../../middlewares/jwt.js';
 import {
   getMyFavorites,
   addFavorite,
@@ -9,12 +8,12 @@ import {
 const router = express.Router();
 
 // Lấy danh sách công việc yêu thích
-router.get('/', verifyToken, getMyFavorites);
+router.get('/', getMyFavorites);
 
 // Thêm vào yêu thích
-router.post('/', verifyToken, addFavorite);
+router.post('/', addFavorite);
 
 // Xóa khỏi yêu thích
-router.delete('/:jobID', verifyToken, removeFavorite);
+router.delete('/:jobID', removeFavorite);
 
 export default router;

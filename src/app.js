@@ -35,6 +35,7 @@ import CandidateNotification from './routes/candidate/notificationCandidate.rout
 import adminTickets from './routes/admin/adminTickets.route.js';
 import dashboardRoutes from './routes/admin/adminDashboard.routes.js';
 import payment from './routes/employer/payments.router.js';
+import companyRouter from './routes/company.routes.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -111,6 +112,7 @@ app.use(
   httpLogger,
   applyJobRouter,
 );
+app.use('/company', companyRouter);
 app.use('/api/resumes', verifyAccessToken, httpLogger, resumeRouter);
 app.use('/api/user', verifyAccessToken, httpLogger, userRoutes);
 app.use('/api/favorites', verifyAccessToken, httpLogger, favoritesRouter);

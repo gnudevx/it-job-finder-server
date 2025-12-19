@@ -1,8 +1,8 @@
 import company from '../models/company.model.js';
-import employer from '../models/employer.model.js';
+import Employer from '../models/employer.model.js';
 import mongoose from 'mongoose';
 export const findCompanyByEmployer = async (userId) => {
-  const emp = await employer.findOne({ userId }).populate('companyId');
+  const emp = await Employer.findOne({ userId }).populate('companyId');
 
   return emp?.companyId || null;
 };
@@ -18,20 +18,21 @@ export const createCompanyService = async (userId, data) => {
     address: data.address,
     phone: data.phone,
     email: data.email,
+    avatar: data.avatar,
     description: data.description,
     type: data.type,
     field: data.field,
   });
 
   // Update employer và lấy kết quả
-  const updatedEmployer = await employer.findOneAndUpdate(
+  const updatedEmployer = await Employer.findOneAndUpdate(
     { userId }, // tìm employer theo userId
     { companyId: newCompany._id },
     { new: true },
   );
 
   // Return cả 2 nếu muốn frontend biết employer
-  return { company: newCompany, employer: updatedEmployer };
+  return { company: newCompany, Employer: updatedEmployer };
 };
 
 export const updateCompanyService = async (companyId, data) => {
@@ -45,6 +46,7 @@ export const updateCompanyService = async (companyId, data) => {
       address: data.address,
       phone: data.phone,
       email: data.email,
+      avatar: data.avatar,
       description: data.description,
       type: data.type,
       field: data.field,
@@ -58,11 +60,21 @@ export const assignCompanyToEmployer = async (userId, companyId) => {
     throw new Error('companyId không hợp lệ');
   }
 
-  const updatedEmployer = await employer.findOneAndUpdate(
+  const updatedEmployer = await Employer.findOneAndUpdate(
     { userId: new mongoose.Types.ObjectId(userId) },
     { companyId: new mongoose.Types.ObjectId(companyId) },
     { new: true },
   );
 
   return updatedEmployer;
+};
+
+export const getCompanyByEmployerIdService = async (employerId) => {
+  const employer = await Employer.findById(employerId).populate('companyId');
+
+  if (!employer || !employer.companyId) {
+    throw new Error('Company not found');
+  }
+
+  return employer.companyId;
 };

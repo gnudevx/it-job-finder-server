@@ -7,7 +7,6 @@ import {
   setDefaultResume,
 } from '../../controllers/resume.controller.js';
 import Resume from '../../models/resumes.model.js';
-import { verifyAccessToken } from '../../middlewares/auth.middleware.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -26,7 +25,7 @@ router.delete('/:id', deleteResume);
 router.put('/default/:id', setDefaultResume);
 
 // Xem CV
-router.get('/:id/view', verifyAccessToken, async (req, res) => {
+router.get('/:id/view', async (req, res) => {
   try {
     const resume = await Resume.findById(req.params.id);
     if (!resume) return res.status(404).send('CV không tồn tại');

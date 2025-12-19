@@ -4,6 +4,7 @@ import {
   updateCompanyService,
   getLatestCompanies,
   assignCompanyToEmployer,
+  getCompanyByEmployerIdService,
 } from '../services/company.service.js';
 
 export const getCompany = async (req, res, next) => {
@@ -97,5 +98,23 @@ export const selectCompany = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Lỗi server' }); // gửi lỗi 1 lần
+  }
+};
+
+export const getCompanyPublicController = async (req, res) => {
+  try {
+    const { employerId } = req.params;
+
+    const company = await getCompanyByEmployerIdService(employerId);
+
+    return res.status(200).json({
+      success: true,
+      data: company,
+    });
+  } catch (error) {
+    return res.status(404).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
