@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import axios from 'axios';
 import Payment from '../models/payment.model.js';
 import Employer from '../models/employer.model.js';
+import AccountActivity from '../models/accountActivity.model.js';
 const PACKAGE_MAP = {
   pkg_basic: { tier: 'FREE', amount: 0 },
   pkg_pro: { tier: 'PRO', amount: 1500000 },
@@ -76,13 +77,22 @@ export const createMoMoPayment = async (req, res) => {
 };
 export const momoIPN = async (req, res) => {
   const { resultCode, orderId } = req.body;
-
+  console.log('body:', req.body);
   const payment = await Payment.findOne({ orderId });
   if (!payment) return res.status(404).json({ message: 'Payment not found' });
 
   if (Number(resultCode) !== 0) {
     payment.status = 'rejected';
     await payment.save();
+    await AccountActivity.create({
+      userId: payment.userId,
+      action: 'PAYMENT_FAILED',
+      meta: {
+        orderId,
+        provider: 'MOMO',
+        resultCode,
+      },
+    });
     return res.status(200).json({ message: 'Failed payment' });
   }
 
@@ -102,6 +112,17 @@ export const momoIPN = async (req, res) => {
     employer.tier = payment.tier;
     employer.subscriptionExpiresAt = payment.expiresAt;
     await employer.save();
+    await AccountActivity.create({
+      userId: payment.userId,
+      action: 'UPGRADE_PACKAGE',
+      meta: {
+        tier: payment.tier,
+        amount: payment.amount,
+        provider: 'MOMO',
+        orderId: payment.orderId,
+        expiresAt: payment.expiresAt,
+      },
+    });
   }
 
   res.status(200).json({ message: 'OK' });

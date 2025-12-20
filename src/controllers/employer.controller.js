@@ -8,6 +8,8 @@ import {
 import Employer from '../models/employer.model.js';
 import User from '../models/User.js';
 import { getJobLimitStatus } from '../services/jobLimitService.service.js';
+import AccountActivity from '../models/accountActivity.model.js';
+import Job from '../models/jobs.model.js';
 export const getEmployersController = async (req, res) => {
   try {
     const { search = '', status = 'all' } = req.query;
@@ -67,8 +69,13 @@ export const getMe = async (req, res) => {
       ...user.toObject(), // convert Mongoose document thành object
       ...employer.toObject(), // ghi đè các field giống nhau nếu có
     };
+    const jobCount = await Job.countDocuments({
+      employer_id: employer._id,
+      visibility: 'visible',
+      status: { $ne: 'draft' },
+    });
 
-    return res.json({ user: mergedUser });
+    return res.json({ user: mergedUser, jobCount: jobCount });
   } catch (err) {
     console.error(err);
     return res.status(500).json({ message: 'Server error' });
@@ -85,7 +92,10 @@ export const updatePersonalInfo = async (req, res) => {
       data,
       { new: true }, // trả về bản cập nhật mới
     );
-
+    await AccountActivity.create({
+      userId: req.user.userId,
+      action: 'UPDATE_PROFILE',
+    });
     if (!updated) {
       return res.status(404).json({ message: 'Không tìm thấy employer!' });
     }
@@ -106,8 +116,12 @@ export const uploadLicenseController = async (req, res) => {
     const fileUrl = `/uploads/licenses/${req.file.filename}`;
 
     const updatedEmployer = await updateLicenseService(userId, fileUrl);
-
-    if (!updatedEmployer)
+    if (updatedEmployer) {
+      await AccountActivity.create({
+        userId: userId,
+        action: 'UPLOAD_LICENSE',
+      });
+    } else if (!updatedEmployer)
       return res.status(404).json({ message: 'Không tìm thấy employer' });
 
     res.json({
@@ -159,8 +173,12 @@ export const verifyPhoneController = async (req, res) => {
 
     // Gọi service
     const result = await verifyPhoneService(employer._id, phone);
-
-    if (!result.success) {
+    if (result.success) {
+      await AccountActivity.create({
+        userId: employerUserId,
+        action: 'VERIFY_PHONE',
+      });
+    } else if (!result.success) {
       return res.status(400).json({ message: result.message });
     }
 

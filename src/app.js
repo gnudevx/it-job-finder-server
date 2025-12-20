@@ -35,6 +35,7 @@ import CandidateNotification from './routes/candidate/notificationCandidate.rout
 import adminTickets from './routes/admin/adminTickets.route.js';
 import dashboardRoutes from './routes/admin/adminDashboard.routes.js';
 import payment from './routes/employer/payments.router.js';
+import accountActivity from './routes/accountActivity.route.js';
 import companyRouter from './routes/company.routes.js';
 
 import './models/skill.model.js';
@@ -80,6 +81,12 @@ app.use(
   verifyAccessToken,
   httpLogger,
   employerSettingRouters,
+);
+app.use(
+  '/employer/account/activities',
+  verifyAccessToken,
+  httpLogger,
+  accountActivity,
 );
 app.use(
   '/employer/support-box/suggest',

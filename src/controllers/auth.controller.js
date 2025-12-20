@@ -4,20 +4,29 @@ import {
   registerService,
 } from '../services/auth.service.js';
 import { changePasswordService } from '../services/user.service.js';
+import User from '../models/User.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
-
+import AuthLog from '../models/authLog.model.js';
 /* 1. LOGIN NORMAL */
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
     const result = await loginService({ email, password });
-    const { accessToken, refreshToken } = result;
+    const { accessToken, refreshToken, user } = result;
 
     if (!accessToken || !refreshToken) {
       throw new Error('Service không trả về token');
     }
+    await User.findByIdAndUpdate(user._id, {
+      lastLogin: new Date(),
+    });
 
+    // 🔹 GHI LOG LOGIN
+    await AuthLog.create({
+      userId: user._id,
+      action: 'LOGIN',
+    });
     // SET COOKIE
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
