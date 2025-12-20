@@ -34,6 +34,7 @@ import EmployerNotification from './routes/employer/notificationEmployer.router.
 import adminTickets from './routes/admin/adminTickets.route.js';
 import dashboardRoutes from './routes/admin/adminDashboard.routes.js';
 import payment from './routes/employer/payments.router.js';
+import accountActivity from './routes/accountActivity.route.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -78,6 +79,12 @@ app.use(
   verifyAccessToken,
   httpLogger,
   employerSettingRouters,
+);
+app.use(
+  '/employer/account/activities',
+  verifyAccessToken,
+  httpLogger,
+  accountActivity,
 );
 app.use(
   '/employer/support-box/suggest',
