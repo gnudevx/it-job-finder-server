@@ -20,7 +20,7 @@ const companySchema = new mongoose.Schema({
   address: { type: String, default: '' },
   phone: { type: String, default: '' },
   email: { type: String, required: true },
-  avatar: {
+  logo: {
     type: String,
     default: '',
   },
