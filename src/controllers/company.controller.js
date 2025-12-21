@@ -5,6 +5,7 @@ import {
   getLatestCompanies,
   assignCompanyToEmployer,
   getCompanyByEmployerIdService,
+  getCompanyById,
 } from '../services/company.service.js';
 
 export const getCompany = async (req, res, next) => {
@@ -101,12 +102,28 @@ export const selectCompany = async (req, res) => {
   }
 };
 
-export const getCompanyPublicController = async (req, res) => {
+export const getCompanyByEmployerPublic = async (req, res) => {
   try {
     const { employerId } = req.params;
 
     const company = await getCompanyByEmployerIdService(employerId);
 
+    return res.status(200).json({
+      success: true,
+      data: company,
+    });
+  } catch (error) {
+    return res.status(404).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getCompanyByIdPublic = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const company = await getCompanyById(id);
     return res.status(200).json({
       success: true,
       data: company,

@@ -1,4 +1,4 @@
-import company from '../models/company.model.js';
+import Company from '../models/company.model.js';
 import Employer from '../models/employer.model.js';
 import mongoose from 'mongoose';
 export const findCompanyByEmployer = async (userId) => {
@@ -7,10 +7,10 @@ export const findCompanyByEmployer = async (userId) => {
   return emp?.companyId || null;
 };
 export const getLatestCompanies = async (limit = 6) => {
-  return await company.find({}).sort({ createdAt: -1 }).limit(limit).lean();
+  return await Company.find({}).sort({ createdAt: -1 }).limit(limit).lean();
 };
 export const createCompanyService = async (userId, data) => {
-  const newCompany = await company.create({
+  const newCompany = await Company.create({
     name: data.companyName,
     taxCode: data.taxCode,
     website: data.website,
@@ -32,11 +32,11 @@ export const createCompanyService = async (userId, data) => {
   );
 
   // Return cả 2 nếu muốn frontend biết employer
-  return { company: newCompany, Employer: updatedEmployer };
+  return { Company: newCompany, Employer: updatedEmployer };
 };
 
 export const updateCompanyService = async (companyId, data) => {
-  return await company.findByIdAndUpdate(
+  return await Company.findByIdAndUpdate(
     companyId,
     {
       name: data.companyName,
@@ -70,11 +70,17 @@ export const assignCompanyToEmployer = async (userId, companyId) => {
 };
 
 export const getCompanyByEmployerIdService = async (employerId) => {
-  const employer = await Employer.findById(employerId).populate('companyId');
+  const emp = await Employer.findById(employerId).populate('companyId');
 
-  if (!employer || !employer.companyId) {
+  return emp?.companyId || null;
+};
+
+export const getCompanyById = async (companyId) => {
+  const company = await Company.findById(companyId);
+
+  if (!company) {
     throw new Error('Company not found');
   }
 
-  return employer.companyId;
+  return company;
 };
