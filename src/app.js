@@ -22,6 +22,7 @@ import favoritesRouter from './routes/candidate/favorites.routes.js';
 import managingRouter from './routes/admin/managing.routes.js';
 import applyJobRouter from './routes/candidate/applyJobs.routes.js';
 import resumeRouter from './routes/candidate/resume.routes.js';
+import resumeRouterDowloads from './routes/candidate/resumeDowload.js';
 import employerApplicationsRouter from './routes/employer/application.router.js';
 
 import employersupport from './routes/employer/support.router.js';
@@ -42,6 +43,7 @@ import './models/skill.model.js';
 import './models/location.model.js';
 import './models/jobGroup.model.js';
 import './models/jobs.model.js';
+import employerSearchCV from './routes/employer/search-cv.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -76,6 +78,7 @@ app.use(
   httpLogger,
   employerVerifyPhone,
 );
+app.use('/employer/search-cv', verifyAccessToken, httpLogger, employerSearchCV);
 app.use(
   '/employer/account/settings',
   verifyAccessToken,
@@ -121,6 +124,8 @@ app.use(
 );
 app.use('/company', companyRouter);
 app.use('/api/resumes', verifyAccessToken, httpLogger, resumeRouter);
+app.use('/api/resumes/downloads', resumeRouterDowloads);
+
 app.use('/api/user', verifyAccessToken, httpLogger, userRoutes);
 app.use('/api/favorites', verifyAccessToken, httpLogger, favoritesRouter);
 app.use('/employer', verifyAccessToken, httpLogger, employerRouters);

@@ -36,6 +36,14 @@ const ParsedResumeSchema = new mongoose.Schema(
       type: String, // "vi" | "en"
       default: 'unknown',
     },
+    summary: {
+      type: String,
+      default: '',
+    },
+    shortSummary: {
+      type: String,
+      default: '',
+    },
   },
   { timestamps: true },
 );

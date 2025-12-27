@@ -5,6 +5,7 @@ import {
   getResumes,
   deleteResume,
   setDefaultResume,
+  downloadResume,
 } from '../../controllers/resume.controller.js';
 import Resume from '../../models/resumes.model.js';
 import path from 'path';
@@ -40,5 +41,5 @@ router.get('/:id/view', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-
+router.get('/:id/download', downloadResume);
 export default router;
