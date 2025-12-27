@@ -1,7 +1,6 @@
 import Resume from '../models/resumes.model.js';
 import candidateService from '../services/candidate.service.js';
 import fs from 'fs';
-
 export const uploadResume = async (req, res) => {
   try {
     const candidate = await candidateService.getMyInfo(req.user.userId);
@@ -83,5 +82,24 @@ export const setDefaultResume = async (req, res) => {
   } catch (err) {
     console.error(err); // <--- thêm dòng này
     res.status(500).json({ message: 'Server error' });
+  }
+};
+export const downloadResume = async (req, res) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+
+    const filePath = '.' + resume.fileUrl; // 🔥 CỰC QUAN TRỌNG
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File not found on server' });
+    }
+
+    res.download(filePath, resume.fileName || 'CV.pdf');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Download failed' });
   }
 };

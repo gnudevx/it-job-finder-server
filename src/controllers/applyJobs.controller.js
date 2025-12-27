@@ -1,7 +1,7 @@
 import { applyToJob } from '../services/applyJobs.service.js';
 import Candidate from '../models/candidate.model.js';
 import Application from '../models/applications.model.js';
-
+import { parseAndSaveResume } from '../services/parseResume.service.js';
 export const applyJobController = async (req, res) => {
   try {
     const { jobId, resumeId, coverLetter } = req.body;
@@ -27,7 +27,13 @@ export const applyJobController = async (req, res) => {
       resumeId,
       coverLetter,
     });
-
+    parseAndSaveResume(resumeId)
+      .then(() => {
+        console.log('Resume parsed successfully:', resumeId);
+      })
+      .catch((err) => {
+        console.error('Resume parse failed:', err.message);
+      });
     return res.status(201).json({
       message: 'Application submitted successfully',
       data: application,
