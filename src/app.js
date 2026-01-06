@@ -122,6 +122,7 @@ app.use(
 );
 app.use('/api/resumes', verifyAccessToken, httpLogger, resumeRouter);
 app.use('/api/resumes/downloads', resumeRouterDowloads);
+app.use('/api/resumes/downloads', resumeRouterDowloads);
 
 app.use('/api/user', verifyAccessToken, httpLogger, userRoutes);
 app.use('/api/favorites', verifyAccessToken, httpLogger, favoritesRouter);
