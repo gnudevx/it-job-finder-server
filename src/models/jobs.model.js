@@ -24,6 +24,13 @@ const jobSchema = new mongoose.Schema(
     salaryTo: String,
     salary_raw: String,
     currency_unit: String,
+    skills: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Skill',
+        default: [],
+      },
+    ],
 
     ageRange: String,
     education: String,
@@ -42,18 +49,17 @@ const jobSchema = new mongoose.Schema(
     group_id: { type: mongoose.Schema.Types.ObjectId, ref: 'JobGroup' },
     employer_id: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employer',
-      default: new mongoose.Types.ObjectId('64e2b9b2d3f4a7c1e3b12345'),
+      ref: 'employer',
     },
     visibility: {
       type: String,
       enum: ['hidden', 'visible', 'expired'],
-      default: 'visible',
+      default: 'hidden',
     },
     publishStatus: {
       type: String,
-      enum: ['draft', 'pending', 'approved', 'rejected'],
-      default: 'approved',
+      enum: ['draft', 'pending', 'approved', 'rejected', 'paused'],
+      default: 'pending',
     },
     service: { type: String, default: null },
     latestDisplay: { type: String, default: null },
@@ -63,4 +69,4 @@ const jobSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-export default mongoose.model('Jobs', jobSchema, 'jobs');
+export default mongoose.model('jobs', jobSchema, 'jobs');

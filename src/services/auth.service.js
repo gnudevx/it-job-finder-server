@@ -1,8 +1,11 @@
 import User from '../models/User.js';
+import Candidate from '../models/candidate.model.js';
+import Employer from '../models/employer.model.js'; // Add this import
 import { comparePassword, hashPassword } from '../utils/hash.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
+
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -23,7 +26,7 @@ export const loginService = async ({ email, password }) => {
   const refreshToken = generateRefreshToken(user);
 
   user.lastLogin = new Date();
-  await user.save();
+  await user.save({ validateBeforeSave: false });
 
   return {
     message: 'Login successfully',
@@ -35,13 +38,11 @@ export const loginService = async ({ email, password }) => {
 
 /* 2. GOOGLE LOGIN */
 export const googleLoginService = async (code) => {
-  // Step 1: Exchange code for tokens
   const { tokens } = await client.getToken({
     code,
     redirect_uri: 'postmessage',
   });
 
-  // Step 2: Verify ID Token to get user info
   const ticket = await client.verifyIdToken({
     idToken: tokens.id_token,
     audience: process.env.GOOGLE_CLIENT_ID,
@@ -49,23 +50,32 @@ export const googleLoginService = async (code) => {
 
   const googleUser = ticket.getPayload();
   const email = googleUser.email;
+  const fullname = googleUser.name || email.split('@')[0];
 
-  // Step 3: Find or create user
   let user = await User.findOne({ email });
+
   if (!user) {
+    // Create new user with default role 'candidate'
     user = await User.create({
       email,
       passwordHash: null,
+      fullname,
       role: 'candidate',
       status: 'active',
     });
+
+    // Create Candidate profile for Google login users (default role)
+    await Candidate.create({
+      fullName: fullname,
+      email: email,
+      gender: 'other',
+      userId: user._id,
+    });
   }
 
-  // Step 4: Issue JWT tokens
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  // Step 5: Update last login
   user.lastLogin = new Date();
   await user.save();
 
@@ -83,27 +93,63 @@ export const registerService = async ({
   email,
   password,
   fullname,
-  username,
+  role = 'candidate',
+  gender = 'other',
 }) => {
   const emailExist = await User.findOne({ email });
   if (emailExist) throw new Error('Email already exists');
 
-  const usernameExist = await User.findOne({ username });
-  if (usernameExist) throw new Error('Username already exists');
+  if (!fullname) throw new Error('Fullname is required');
+
+  // Validate role
+  const validRoles = ['candidate', 'employer', 'admin'];
+  if (!validRoles.includes(role)) {
+    throw new Error('Invalid role');
+  }
+  const validGenders = ['male', 'female', 'other'];
+  if (!validGenders.includes(gender)) {
+    throw new Error('Invalid gender');
+  }
 
   const hashedPassword = await hashPassword(password);
 
-  const user = new User({
+  // Create User
+  const user = await User.create({
     email,
     passwordHash: hashedPassword,
     fullname,
-    username,
+    role: role,
+    gender: gender,
+    status: 'active',
   });
 
-  await user.save();
+  let candidate = null;
+  let employer = null;
+
+  // Create role-specific profile
+  if (role === 'candidate') {
+    candidate = await Candidate.create({
+      fullName: fullname,
+      email: email,
+      userId: user._id,
+    });
+  } else if (role === 'employer') {
+    employer = await Employer.create({
+      fullName: fullname,
+      email: email,
+      gender: gender,
+      userId: user._id,
+      tier: 'FREE',
+      creditBalance: 0,
+      phoneVerified: false,
+    });
+  }
 
   return {
     message: 'Register successfully',
+    user,
+    candidate,
+    employer,
   };
 };
 
@@ -112,6 +158,7 @@ export const refreshTokenController = async (req, res, next) => {
     const refreshToken = req.cookies.refreshToken;
     if (!refreshToken)
       return res.status(401).json({ message: 'Refresh token missing' });
+
     jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
       if (err) {
         return res
@@ -123,7 +170,7 @@ export const refreshTokenController = async (req, res, next) => {
         httpOnly: true,
         secure: false,
         sameSite: 'Lax',
-        maxAge: 15 * 60 * 1000,
+        maxAge: 60 * 60 * 1000,
       });
 
       return res.status(200).json({ message: 'Refresh token successfully' });

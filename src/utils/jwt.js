@@ -9,7 +9,7 @@ const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 // ACCESS TOKEN (hết hạn nhanh, bảo mật chính)
 export const generateAccessToken = (user) => {
   return jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user._id, role: user.role.toUpperCase() },
     ACCESS_TOKEN_SECRET,
     { expiresIn: '1h' }, // 1h là chuẩn, bạn có thể đổi thành "7d"
   );
