@@ -55,7 +55,37 @@ export const googleLogin = async (req, res) => {
   try {
     const { code } = req.body;
     const result = await googleLoginService(code);
-    res.json(result);
+
+    const { accessToken, refreshToken, user } = result;
+    await User.findByIdAndUpdate(user._id, {
+      lastLogin: new Date(),
+    });
+
+    // 🔹 GHI LOG LOGIN
+    await AuthLog.create({
+      userId: user._id,
+      action: 'LOGIN',
+    });
+
+    // SET COOKIE refreshToken
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    // SET COOKIE accessToken
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 1000,
+    });
+
+    return res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

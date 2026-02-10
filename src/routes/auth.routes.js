@@ -1,10 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import {
-  googleLoginService,
-  refreshTokenController,
-} from '../services/auth.service.js';
-import { login } from '../controllers/auth.controller.js';
+import { refreshTokenController } from '../services/auth.service.js';
+import { login, googleLogin } from '../controllers/auth.controller.js';
 import { register } from '../controllers/auth.controller.js';
 import AuthLog from '../models/authLog.model.js';
 import { getAuthLogs } from '../controllers/authLog.controller.js';
@@ -35,13 +32,6 @@ router.post('/logout', verifyAccessToken, async (req, res) => {
 });
 router.post('/register', register);
 // GOOGLE LOGIN
-router.post('/google', async (req, res) => {
-  try {
-    const result = await googleLoginService(req.body.code);
-    return res.json(result);
-  } catch (error) {
-    return res.status(400).json({ error: error.message });
-  }
-});
+router.post('/google', googleLogin);
 router.get('/logs', verifyAccessToken, getAuthLogs);
 export default router;
