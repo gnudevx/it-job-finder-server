@@ -114,7 +114,7 @@ export const changePasswordController = async (req, res, next) => {
 /* 4. REGISTER + AUTO LOGIN */
 export const register = async (req, res, next) => {
   try {
-    const { email, password, fullname } = req.body;
+    const { email, password, fullname, role, gender } = req.body;
 
     if (!email || !password || !fullname) {
       return res.status(400).json({ message: 'Missing required fields' });
@@ -130,6 +130,8 @@ export const register = async (req, res, next) => {
       email,
       password,
       fullname,
+      role,
+      gender,
     });
 
     // AUTO LOGIN
