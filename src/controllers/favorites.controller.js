@@ -1,3 +1,4 @@
+import Candidate from '../models/candidate.model.js';
 import Favorite from '../models/favorites.model.js';
 import Job from '../models/jobs.model.js';
 
@@ -17,7 +18,11 @@ export const getMyFavorites = async (req, res) => {
 // Lưu job yêu thích
 export const addFavorite = async (req, res) => {
   try {
-    const candidateID = req.user.id;
+    const userId = req.user.userId;
+    const candidateID = await Candidate.findOne({ userId }).then(
+      (candidate) => candidate._id,
+    );
+
     const { jobID } = req.body;
 
     // Kiểm tra job có tồn tại không
@@ -50,7 +55,10 @@ export const addFavorite = async (req, res) => {
 // Xóa job khỏi danh sách yêu thích
 export const removeFavorite = async (req, res) => {
   try {
-    const candidateID = req.user.id;
+    const userId = req.user.userId;
+    const candidateID = await Candidate.findOne({ userId }).then(
+      (candidate) => candidate._id,
+    );
     const { jobID } = req.params;
 
     const deleted = await Favorite.findOneAndDelete({ candidateID, jobID });
