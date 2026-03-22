@@ -39,6 +39,7 @@ import payment from './routes/employer/payments.router.js';
 import accountActivity from './routes/accountActivity.route.js';
 import companyRouter from './routes/company.routes.js';
 import employerConversation from './routes/employer/conversation.router.js';
+import candidateConversation from './routes/candidate/conversation.router.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -84,6 +85,12 @@ app.use(
   verifyAccessToken,
   httpLogger,
   employerConversation,
+);
+app.use(
+  '/candidate/connect',
+  verifyAccessToken,
+  httpLogger,
+  candidateConversation,
 );
 app.use('/employer/search-cv', verifyAccessToken, httpLogger, employerSearchCV);
 app.use(
