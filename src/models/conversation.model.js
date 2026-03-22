@@ -12,6 +12,12 @@ const ConversationSchema = new mongoose.Schema(
       ref: 'Candidate',
       required: true,
     },
+    jobId: {
+      // 👈 THÊM CÁI NÀY
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Job',
+      required: true,
+    },
   },
   { timestamps: true },
 );

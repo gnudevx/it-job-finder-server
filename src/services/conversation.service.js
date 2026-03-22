@@ -36,7 +36,7 @@ export const getConversationsByEmployer = async (employerId) => {
       const lastMsg = await Message.find({ conversationId: c._id })
         .sort({ createdAt: -1 })
         .limit(1); // chỉ lấy tin nhắn cuối cùng
-
+      if (!lastMsg.length) return null;
       const unreadCount = await Message.countDocuments({
         conversationId: c._id,
         read: false,
@@ -55,9 +55,74 @@ export const getConversationsByEmployer = async (employerId) => {
     }),
   );
 
-  return results;
+  return results.filter(Boolean);
 };
 
+export const getApplicationsByCandidate = async (candidateId) => {
+  const applications = await Application.find({ candidateId })
+    .populate({
+      path: 'jobId',
+      select: 'title employer_id',
+      populate: {
+        path: 'employer_id',
+        select: 'avatar companyId',
+        populate: {
+          path: 'companyId',
+          select: 'name logo',
+        },
+      },
+    })
+    .sort({ appliedAt: -1 });
+
+  return applications.map((app) => ({
+    id: app.jobId.employer_id._id,
+    name: app.jobId.employer_id.companyId?.name || 'Unknown Company',
+    avatar:
+      app.jobId.employer_id.companyId?.logo || app.jobId.employer_id.avatar,
+    position: app.jobId.title,
+    jobId: app.jobId._id, // 🔥 QUAN TRỌNG (để tạo conversation)
+  }));
+};
+
+export const getConversationsByCandidate = async (candidateId) => {
+  const conversations = await Conversation.find({ candidateId })
+    .populate({
+      path: 'employerId',
+      select: 'avatar companyId',
+      populate: {
+        path: 'companyId',
+        select: 'name logo',
+      },
+    })
+    .sort({ updatedAt: -1 });
+
+  const results = await Promise.all(
+    conversations.map(async (c) => {
+      const lastMsg = await Message.find({ conversationId: c._id })
+        .sort({ createdAt: -1 })
+        .limit(1);
+      if (!lastMsg.length) return null;
+      const unreadCount = await Message.countDocuments({
+        conversationId: c._id,
+        read: false,
+        senderId: { $ne: candidateId }, // tin của employer chưa đọc
+      });
+
+      return {
+        id: c.employerId._id,
+        name: c.employerId.companyId?.name || 'Unknown Company',
+        avatar: c.employerId.companyId?.logo || c.employerId.avatar,
+
+        lastMessage: lastMsg[0]?.text || '',
+        lastMessageTime: lastMsg[0]?.createdAt || c.updatedAt,
+        unreadCount,
+        conversationId: c._id,
+      };
+    }),
+  );
+
+  return results.filter(Boolean);
+};
 export const getApplicationsByEmployer = async (employerId) => {
   const last7Days = new Date();
   last7Days.setDate(last7Days.getDate() - 7);
@@ -103,8 +168,9 @@ export const getApplicationsByEmployer = async (employerId) => {
     }
 
     return {
-      jobTitle: jobMap[app.jobId.toString()],
+      position: jobMap[app.jobId.toString()],
       appliedAt: timeAgo,
+      jobId: app.jobId,
       candidate: {
         candidateId: app.candidateId?._id,
         fullName: app.candidateId?.fullName,
