@@ -1,21 +1,15 @@
 import {
   getOrCreateConversation,
-  getConversationsByEmployer,
-  getApplicationsByEmployer,
+  getConversationsByCandidate,
+  getApplicationsByCandidate,
 } from '../services/conversation.service.js';
-import Employer from '../models/employer.model.js';
-export const getEmployerConversations = async (req, res) => {
+import Candidate from '../models/candidate.model.js';
+export const getCandidateConversations = async (req, res) => {
   try {
-    const employer = await Employer.findOne({ userId: req.user.userId });
-    const employerId = employer._id;
-    console.log('employerId', employerId);
-    if (!employerId) {
-      return res.status(404).json({
-        success: false,
-        message: 'Employer not found',
-      });
-    }
-    const data = await getConversationsByEmployer(employerId);
+    const candidate = await Candidate.findOne({ userId: req.user.userId });
+    const candidateId = candidate._id;
+
+    const data = await getConversationsByCandidate(candidateId);
 
     res.json(data);
   } catch (err) {
@@ -25,10 +19,9 @@ export const getEmployerConversations = async (req, res) => {
 
 export const createConversation = async (req, res) => {
   try {
-    const employer = await Employer.findOne({ userId: req.user.userId });
-    const employerId = employer._id;
-
-    const { candidateId, jobId } = req.body;
+    const candidate = await Candidate.findOne({ userId: req.user.userId });
+    const candidateId = candidate._id;
+    const { employerId, jobId } = req.body;
 
     const convo = await getOrCreateConversation({
       employerId,
@@ -42,14 +35,14 @@ export const createConversation = async (req, res) => {
   }
 };
 
-export const getCandidate = async (req, res) => {
+export const getCandidateApplications = async (req, res) => {
   try {
     // 1. lấy employer từ user
-    const employer = await Employer.findOne({
+    const candidate = await Candidate.findOne({
       userId: req.user.userId,
     });
 
-    if (!employer) {
+    if (!candidate) {
       return res.status(404).json({
         success: false,
         message: 'Employer not found',
@@ -57,7 +50,7 @@ export const getCandidate = async (req, res) => {
     }
 
     // 2. dùng employer._id (QUAN TRỌNG)
-    const applications = await getApplicationsByEmployer(employer._id);
+    const applications = await getApplicationsByCandidate(candidate._id);
 
     res.status(200).json({
       success: true,
