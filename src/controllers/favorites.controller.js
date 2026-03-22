@@ -5,7 +5,10 @@ import Job from '../models/jobs.model.js';
 // Lấy các job đã lưu
 export const getMyFavorites = async (req, res) => {
   try {
-    const candidateID = req.user.id;
+    const userId = req.user.userId;
+    const candidateID = await Candidate.findOne({ userId }).then(
+      (candidate) => candidate._id,
+    );
 
     const favorites = await Favorite.find({ candidateID }).populate('jobID');
 
