@@ -15,8 +15,21 @@ const ConversationSchema = new mongoose.Schema(
     jobId: {
       // 👈 THÊM CÁI NÀY
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Job',
+      ref: 'jobs',
       required: true,
+    },
+    lastMessage: {
+      type: String,
+      default: '',
+    },
+
+    lastMessageTime: {
+      type: Date,
+    },
+
+    unreadCount: {
+      employer: { type: Number, default: 0 },
+      candidate: { type: Number, default: 0 },
     },
   },
   { timestamps: true },
