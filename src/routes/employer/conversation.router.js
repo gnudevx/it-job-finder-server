@@ -17,7 +17,7 @@ router.get('/conversations/employer', getEmployerConversations);
 router.post('/conversations', createConversation);
 
 // message
-router.get('/messages/:conversationId', getConversationMessages);
+router.get('/messages', getConversationMessages);
 router.post('/messages', sendMessageController);
 
 router.get('/applications', getCandidate);
