@@ -65,6 +65,10 @@ const jobSchema = new mongoose.Schema(
     latestDisplay: { type: String, default: null },
     totalDisplay: { type: String, default: null },
     display_expired_at: { type: Date, default: null },
+    embedding: {
+      type: [Number],
+      default: [],
+    },
   },
   { timestamps: true },
 );

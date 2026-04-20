@@ -41,6 +41,7 @@ import companyRouter from './routes/company.routes.js';
 import employerConversation from './routes/employer/conversation.router.js';
 import candidateConversation from './routes/candidate/conversation.router.js';
 import message from './routes/message.routes.js';
+import recommendRoutes from './routes/recommend.routes.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -193,6 +194,7 @@ app.use(
   AdminNotification,
 );
 app.use('/admin/dashboard', dashboardRoutes);
+app.use('/api/recommend', recommendRoutes);
 
 app.use('/uploads', verifyAccessToken, httpLogger, express.static('uploads'));
 app.use(errorLogger);
