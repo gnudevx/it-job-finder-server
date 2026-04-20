@@ -10,6 +10,7 @@ export const getCandidateConversations = async (req, res) => {
     const candidateId = candidate._id;
 
     const data = await getConversationsByCandidate(candidateId);
+    console.log('id candidate: ', data);
 
     res.json(data);
   } catch (err) {

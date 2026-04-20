@@ -29,6 +29,10 @@ export const getOrCreateConversation = async ({
 export const getConversationsByEmployer = async (employerId) => {
   const conversations = await Conversation.find({ employerId })
     .populate('candidateId', 'fullName avatar')
+    .populate({
+      path: 'jobId',
+      select: 'title',
+    })
     .sort({ updatedAt: -1 });
 
   const results = await Promise.all(
@@ -37,19 +41,18 @@ export const getConversationsByEmployer = async (employerId) => {
         .sort({ createdAt: -1 })
         .limit(1); // chỉ lấy tin nhắn cuối cùng
       if (!lastMsg.length) return null;
-      const unreadCount = await Message.countDocuments({
-        conversationId: c._id,
-        read: false,
-        senderId: { $ne: employerId }, // chưa đọc của candidate
-      });
 
       return {
         id: c.candidateId._id,
         name: c.candidateId.fullName,
         avatar: c.candidateId.avatar,
+        position: c.jobId?.title,
         lastMessage: lastMsg[0]?.text || '',
         lastMessageTime: lastMsg[0]?.createdAt || c.updatedAt,
-        unreadCount,
+        unreadCount: c.unreadCount || {
+          employer: 0,
+          candidate: 0,
+        },
         conversationId: c._id,
       };
     }),
@@ -94,33 +97,36 @@ export const getConversationsByCandidate = async (candidateId) => {
         select: 'name logo',
       },
     })
+    .populate({
+      path: 'jobId',
+      select: 'title',
+    })
     .sort({ updatedAt: -1 });
-
   const results = await Promise.all(
     conversations.map(async (c) => {
+      if (!c.employerId) return null;
+
       const lastMsg = await Message.find({ conversationId: c._id })
         .sort({ createdAt: -1 })
         .limit(1);
+
       if (!lastMsg.length) return null;
-      const unreadCount = await Message.countDocuments({
-        conversationId: c._id,
-        read: false,
-        senderId: { $ne: candidateId }, // tin của employer chưa đọc
-      });
 
       return {
-        id: c.employerId._id,
-        name: c.employerId.companyId?.name || 'Unknown Company',
-        avatar: c.employerId.companyId?.logo || c.employerId.avatar,
-
+        position: c.jobId?.title,
+        id: c.employerId?._id,
+        name: c.employerId?.companyId?.name || 'Unknown Company',
+        avatar: c.employerId?.companyId?.logo || c.employerId?.avatar,
         lastMessage: lastMsg[0]?.text || '',
         lastMessageTime: lastMsg[0]?.createdAt || c.updatedAt,
-        unreadCount,
+        unreadCount: c.unreadCount || {
+          employer: 0,
+          candidate: 0,
+        },
         conversationId: c._id,
       };
     }),
   );
-
   return results.filter(Boolean);
 };
 export const getApplicationsByEmployer = async (employerId) => {

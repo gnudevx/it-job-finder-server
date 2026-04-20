@@ -17,9 +17,8 @@ router.get('/conversations/candidate', getCandidateConversations);
 router.post('/conversations', createConversation);
 
 // message
-router.get('/messages/:conversationId', getConversationMessages);
+router.get('/messages', getConversationMessages);
 router.post('/messages', sendMessageController);
 
 router.get('/applications', getCandidateApplications);
-
 export default router;

@@ -40,6 +40,7 @@ import accountActivity from './routes/accountActivity.route.js';
 import companyRouter from './routes/company.routes.js';
 import employerConversation from './routes/employer/conversation.router.js';
 import candidateConversation from './routes/candidate/conversation.router.js';
+import message from './routes/message.routes.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
@@ -86,6 +87,7 @@ app.use(
   httpLogger,
   employerConversation,
 );
+app.use('/messages', verifyAccessToken, httpLogger, message);
 app.use(
   '/candidate/connect',
   verifyAccessToken,
