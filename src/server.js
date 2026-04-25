@@ -18,6 +18,7 @@ export const io = new SocketIO(server, {
   },
 });
 
+app.set('io', io);
 // Socket events
 io.on('connection', (socket) => {
   console.log('Socket connected: ', socket.id);
@@ -64,6 +65,11 @@ io.on('connection', (socket) => {
   });
   socket.on('disconnect', () => {
     console.log('Socket disconnected:', socket.id);
+  });
+
+  socket.on('join', ({ userId, role }) => {
+    if (userId) socket.join(`user:${userId}`);
+    if (role) socket.join(`role:${role}`);
   });
 });
 

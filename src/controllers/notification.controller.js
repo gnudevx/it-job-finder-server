@@ -29,7 +29,7 @@ export const NotificationController = {
         io.to(`role:${recipientRole}`).emit('notification:new', newNoti);
 
         // gửi riêng tư
-        if (recipientId) {
+        if (recipientId && recipientId !== 'ALL') {
           io.to(`user:${recipientId}`).emit('notification:new', newNoti);
         }
       }
