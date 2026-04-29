@@ -25,6 +25,30 @@ export const getOrCreateConversation = async ({
 
   return convo;
 };
+const formatLastMessage = (msg) => {
+  if (!msg) return '';
+
+  if (msg.type === 'text') {
+    return msg.text;
+  }
+
+  if (msg.type === 'call') {
+    switch (msg.callStatus) {
+      case 'missed':
+        return '📞 Cuộc gọi nhỡ';
+      case 'declined':
+        return '❌ Cuộc gọi bị từ chối';
+      case 'completed':
+        return `📞 Cuộc gọi (${msg.callDuration}s)`;
+      case 'ongoing':
+        return '📞 Đang gọi...';
+      default:
+        return '📞 Cuộc gọi';
+    }
+  }
+
+  return '';
+};
 
 export const getConversationsByEmployer = async (employerId) => {
   const conversations = await Conversation.find({ employerId })
@@ -41,14 +65,14 @@ export const getConversationsByEmployer = async (employerId) => {
         .sort({ createdAt: -1 })
         .limit(1); // chỉ lấy tin nhắn cuối cùng
       if (!lastMsg.length) return null;
-
+      const last = lastMsg[0];
       return {
         id: c.candidateId._id,
         name: c.candidateId.fullName,
         avatar: c.candidateId.avatar,
         position: c.jobId?.title,
-        lastMessage: lastMsg[0]?.text || '',
-        lastMessageTime: lastMsg[0]?.createdAt || c.updatedAt,
+        lastMessage: formatLastMessage(last),
+        lastMessageTime: last?.createdAt || c.updatedAt,
         unreadCount: c.unreadCount || {
           employer: 0,
           candidate: 0,
@@ -111,14 +135,14 @@ export const getConversationsByCandidate = async (candidateId) => {
         .limit(1);
 
       if (!lastMsg.length) return null;
-
+      const last = lastMsg[0];
       return {
         position: c.jobId?.title,
         id: c.employerId?._id,
         name: c.employerId?.companyId?.name || 'Unknown Company',
         avatar: c.employerId?.companyId?.logo || c.employerId?.avatar,
-        lastMessage: lastMsg[0]?.text || '',
-        lastMessageTime: lastMsg[0]?.createdAt || c.updatedAt,
+        lastMessage: formatLastMessage(last),
+        lastMessageTime: last?.createdAt || c.updatedAt,
         unreadCount: c.unreadCount || {
           employer: 0,
           candidate: 0,
