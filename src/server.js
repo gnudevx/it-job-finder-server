@@ -5,7 +5,12 @@ import { Server as SocketIO } from 'socket.io';
 import Conversation from './models/conversation.model.js';
 import Employer from './models/employer.model.js';
 import Candidate from './models/candidate.model.js';
+import Message from './models/message.model.js';
 const PORT = process.env.PORT || 5000;
+// Map lưu session đang gọi trong memory
+const callSessions = new Map();
+// Map lưu timeout cho missed call (30s không nghe = missed)
+const callTimeouts = new Map();
 
 // Tạo HTTP server
 const server = http.createServer(app);
@@ -65,6 +70,164 @@ io.on('connection', (socket) => {
   });
   socket.on('disconnect', () => {
     console.log('Socket disconnected:', socket.id);
+  });
+  socket.on('user:join', (userId) => {
+    socket.join(`user:${userId}`);
+    console.log(`User ${userId} joined personal room`);
+  });
+  socket.on('call:ring', async ({ conversationId, callerId }) => {
+    const conversation = await Conversation.findById(conversationId);
+    if (!conversation) return;
+
+    const employer = await Employer.findById(conversation.employerId);
+    const candidate = await Candidate.findById(conversation.candidateId);
+
+    // ✅ khai báo trước, dùng sau
+    const isEmployerCaller = String(employer.userId) === String(callerId);
+
+    const calleeUserId = isEmployerCaller
+      ? String(candidate.userId)
+      : String(employer.userId);
+
+    const callerInfo = isEmployerCaller
+      ? { name: employer.fullName, avatar: employer.avatar }
+      : { name: candidate.fullName, avatar: candidate.avatar };
+
+    callSessions.set(conversationId, {
+      callerId,
+      status: 'ringing',
+      ringTime: new Date(),
+    });
+
+    io.to(`user:${calleeUserId}`).emit('call:ring', {
+      conversationId,
+      callerId,
+      callerName: callerInfo.name,
+      callerAvatar: callerInfo.avatar,
+    });
+
+    // Timeout missed 30s
+    const timeout = setTimeout(async () => {
+      const session = callSessions.get(conversationId);
+      if (session?.status === 'ringing') {
+        callSessions.delete(conversationId);
+        callTimeouts.delete(conversationId);
+
+        const msg = await Message.create({
+          conversationId,
+          type: 'call',
+          callStatus: 'missed',
+          callInitiatorId: callerId,
+          callDuration: 0,
+          callStartTime: session.ringTime,
+          callEndTime: new Date(),
+        });
+
+        io.to(conversationId).emit('call:missed', {
+          conversationId,
+          message: msg,
+        });
+      }
+    }, 30000);
+
+    callTimeouts.set(conversationId, timeout);
+  });
+
+  // 📡 Bước 2: Signaling WebRTC (giữ nguyên)
+  socket.on('call:offer', ({ conversationId, sdp }) => {
+    socket.to(conversationId).emit('call:offer', { sdp });
+  });
+  socket.on('call:accepted', ({ conversationId }) => {
+    const session = callSessions.get(conversationId);
+    if (!session) return;
+
+    if (!session.startTime) {
+      session.status = 'ongoing';
+      session.startTime = new Date();
+    }
+
+    clearTimeout(callTimeouts.get(conversationId));
+    callTimeouts.delete(conversationId);
+
+    // 👇 THÊM: báo cho caller biết callee đã sẵn sàng
+    socket.to(conversationId).emit('call:accepted', { conversationId });
+  });
+  socket.on('call:answer', ({ conversationId, sdp }) => {
+    // Xoá timeout missed vì đã nghe máy
+    clearTimeout(callTimeouts.get(conversationId));
+    callTimeouts.delete(conversationId);
+    const session = callSessions.get(conversationId);
+    // Cập nhật session → đang gọi
+    if (session) {
+      session.status = 'ongoing';
+      session.startTime = new Date();
+    }
+
+    socket.to(conversationId).emit('call:answer', { sdp });
+  });
+
+  socket.on('call:ice-candidate', ({ conversationId, candidate }) => {
+    socket.to(conversationId).emit('call:ice-candidate', { candidate });
+  });
+
+  // ❌ Bước 3a: Callee chủ động từ chối
+  socket.on('call:decline', async ({ conversationId }) => {
+    clearTimeout(callTimeouts.get(conversationId));
+    callTimeouts.delete(conversationId);
+
+    const session = callSessions.get(conversationId);
+    callSessions.delete(conversationId);
+
+    const msg = await Message.create({
+      conversationId,
+      type: 'call',
+      callStatus: 'declined',
+      callInitiatorId: session?.callerId,
+      callDuration: 0,
+      callStartTime: session?.ringTime,
+      callEndTime: new Date(),
+    });
+
+    // Báo caller biết bị từ chối
+    io.to(conversationId).emit('call:declined', {
+      conversationId,
+      message: msg,
+    });
+  });
+
+  // 📵 Bước 3b: Kết thúc cuộc gọi đang diễn ra
+  socket.on('call:end', async ({ conversationId }) => {
+    const session = callSessions.get(conversationId);
+
+    // ❌ nếu đã xử lý rồi thì bỏ
+    if (!session || session.ended) return;
+
+    session.ended = true; // 🔥 đánh dấu
+
+    clearTimeout(callTimeouts.get(conversationId));
+    callTimeouts.delete(conversationId);
+
+    const endTime = new Date();
+    const duration = session.startTime
+      ? Math.floor((endTime - session.startTime) / 1000)
+      : 0;
+
+    const msg = await Message.create({
+      conversationId,
+      type: 'call',
+      callStatus: session.startTime ? 'completed' : 'missed',
+      callInitiatorId: session.callerId,
+      callDuration: duration,
+      callStartTime: session.startTime || session.ringTime,
+      callEndTime: endTime,
+    });
+
+    callSessions.delete(conversationId);
+
+    io.to(conversationId).emit('call:ended', {
+      conversationId,
+      message: msg,
+    });
   });
 
   socket.on('join', ({ userId, role }) => {
