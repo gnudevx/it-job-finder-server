@@ -25,7 +25,6 @@ router.post('/send-file', uploadChatFile.single('file'), async (req, res) => {
     });
 
     // emit realtime
-    req.io.to(conversationId).emit('message:new', message);
 
     res.json(message);
   } catch (err) {

@@ -1,6 +1,12 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
+const uploadPath = 'uploads/chat';
 
+// 👉 tạo folder nếu chưa có
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/licenses');

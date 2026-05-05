@@ -32,6 +32,10 @@ const formatLastMessage = (msg) => {
     return msg.text;
   }
 
+  if (msg.type === 'file') {
+    return '📎 File'; // 🔥 FIX CHÍNH
+  }
+
   if (msg.type === 'call') {
     switch (msg.callStatus) {
       case 'missed':
@@ -51,7 +55,10 @@ const formatLastMessage = (msg) => {
 };
 
 export const getConversationsByEmployer = async (employerId) => {
-  const conversations = await Conversation.find({ employerId })
+  const conversations = await Conversation.find({
+    employerId,
+    lastMessage: { $ne: '' },
+  })
     .populate('candidateId', 'fullName avatar')
     .populate({
       path: 'jobId',
@@ -64,14 +71,13 @@ export const getConversationsByEmployer = async (employerId) => {
       const lastMsg = await Message.find({ conversationId: c._id })
         .sort({ createdAt: -1 })
         .limit(1); // chỉ lấy tin nhắn cuối cùng
-      if (!lastMsg.length) return null;
       const last = lastMsg[0];
       return {
         id: c.candidateId._id,
         name: c.candidateId.fullName,
         avatar: c.candidateId.avatar,
         position: c.jobId?.title,
-        lastMessage: formatLastMessage(last),
+        lastMessage: last ? formatLastMessage(last) : c.lastMessage || '',
         lastMessageTime: last?.createdAt || c.updatedAt,
         unreadCount: c.unreadCount || {
           employer: 0,
@@ -112,7 +118,10 @@ export const getApplicationsByCandidate = async (candidateId) => {
 };
 
 export const getConversationsByCandidate = async (candidateId) => {
-  const conversations = await Conversation.find({ candidateId })
+  const conversations = await Conversation.find({
+    candidateId,
+    lastMessage: { $ne: '' },
+  })
     .populate({
       path: 'employerId',
       select: 'avatar companyId',
@@ -134,14 +143,13 @@ export const getConversationsByCandidate = async (candidateId) => {
         .sort({ createdAt: -1 })
         .limit(1);
 
-      if (!lastMsg.length) return null;
       const last = lastMsg[0];
       return {
         position: c.jobId?.title,
         id: c.employerId?._id,
         name: c.employerId?.companyId?.name || 'Unknown Company',
         avatar: c.employerId?.companyId?.logo || c.employerId?.avatar,
-        lastMessage: formatLastMessage(last),
+        lastMessage: last ? formatLastMessage(last) : c.lastMessage || '',
         lastMessageTime: last?.createdAt || c.updatedAt,
         unreadCount: c.unreadCount || {
           employer: 0,
