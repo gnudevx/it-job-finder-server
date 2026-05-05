@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
     const updated = await Conversation.findByIdAndUpdate(
       conversationId,
       {
-        lastMessage: message.text,
+        lastMessage: message.type === 'file' ? '📎 File' : message.text || '',
         lastMessageTime: message.createdAt,
         $inc: {
           'unreadCount.employer': isEmployerSender ? 0 : 1,
