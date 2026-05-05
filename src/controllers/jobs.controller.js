@@ -56,7 +56,7 @@ export const getJobsGroup = async (req, res) => {
 };
 export const createJob = async (req, res, next) => {
   try {
-    const employerUserId = req.user.userId; // 🔹 user id từ token
+    const employerUserId = req.user.userId; // user id từ token
     console.log('Employer User ID:', employerUserId);
     // Kiểm tra employer tồn tại
     const employer = await Employer.findOne({ userId: employerUserId });

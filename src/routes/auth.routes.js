@@ -15,13 +15,13 @@ router.post('/logout', verifyAccessToken, async (req, res) => {
   try {
     const userId = req.user.userId;
 
-    // 🔹 GHI LOG LOGOUT
+    // GHI LOG LOGOUT
     await AuthLog.create({
       userId,
       action: 'LOGOUT',
     });
 
-    // 🔹 CLEAR COOKIE
+    // CLEAR COOKIE
     res.clearCookie('accessToken', { path: '/' });
     res.clearCookie('refreshToken', { path: '/' });
 

@@ -107,7 +107,7 @@ export const getApplicationsByCandidate = async (candidateId) => {
     avatar:
       app.jobId.employer_id.companyId?.logo || app.jobId.employer_id.avatar,
     position: app.jobId.title,
-    jobId: app.jobId._id, // 🔥 QUAN TRỌNG (để tạo conversation)
+    jobId: app.jobId._id, // QUAN TRỌNG (để tạo conversation)
   }));
 };
 
@@ -177,7 +177,7 @@ export const getApplicationsByEmployer = async (employerId) => {
     jobId: { $in: jobIds },
     appliedAt: { $gte: last7Days },
   })
-    .populate('candidateId', 'candidateId fullName avatar') // 👈 chỉ lấy 2 field
+    .populate('candidateId', 'candidateId fullName avatar') // chỉ lấy 2 field
     .select('jobId appliedAt candidateId')
     .sort({ appliedAt: -1 });
 

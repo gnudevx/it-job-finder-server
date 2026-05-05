@@ -13,7 +13,7 @@ const ConversationSchema = new mongoose.Schema(
       required: true,
     },
     jobId: {
-      // 👈 THÊM CÁI NÀY
+      // THÊM CÁI NÀY
       type: mongoose.Schema.Types.ObjectId,
       ref: 'jobs',
       required: true,

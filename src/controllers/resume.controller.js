@@ -1,6 +1,7 @@
 import Resume from '../models/resumes.model.js';
 import candidateService from '../services/candidate.service.js';
 import fs from 'fs';
+import path from 'path';
 export const uploadResume = async (req, res) => {
   try {
     const candidate = await candidateService.getMyInfo(req.user.userId);
@@ -91,7 +92,7 @@ export const downloadResume = async (req, res) => {
       return res.status(404).json({ message: 'Resume not found' });
     }
 
-    const filePath = '.' + resume.fileUrl; // 🔥 CỰC QUAN TRỌNG
+    const filePath = '.' + resume.fileUrl; // CỰC QUAN TRỌNG
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: 'File not found on server' });
@@ -101,5 +102,49 @@ export const downloadResume = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Download failed' });
+  }
+};
+
+export const recommendResume = async (req, res) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) {
+      return res.status(404).json({ message: 'CV không tồn tại' });
+    }
+
+    const relativePath = resume.fileUrl.startsWith('/')
+      ? resume.fileUrl.slice(1)
+      : resume.fileUrl;
+    const filePath = path.join(process.cwd(), relativePath);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ message: 'File không tồn tại' });
+    }
+
+    const fileBuffer = await fs.promises.readFile(filePath);
+    const blob = new Blob([fileBuffer], { type: 'application/pdf' });
+    const formData = new FormData();
+    formData.append('file', blob, resume.fileName);
+
+    const recommendUrl =
+      process.env.CV_RECOMMEND_URL || 'http://localhost:8000/recommend';
+    const response = await fetch(recommendUrl, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      console.error('Recommend service returned error:', response.status, text);
+      return res
+        .status(502)
+        .json({ message: 'Dịch vụ gợi ý CV lỗi', detail: text });
+    }
+
+    const data = await response.json();
+    return res.status(200).json(data);
+  } catch (err) {
+    console.error('recommendResume error:', err);
+    return res.status(500).json({ message: 'Recommend CV thất bại' });
   }
 };

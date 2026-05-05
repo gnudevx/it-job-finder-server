@@ -22,7 +22,7 @@ export const login = async (req, res, next) => {
       lastLogin: new Date(),
     });
 
-    // 🔹 GHI LOG LOGIN
+    // GHI LOG LOGIN
     await AuthLog.create({
       userId: user._id,
       action: 'LOGIN',
@@ -61,7 +61,7 @@ export const googleLogin = async (req, res) => {
       lastLogin: new Date(),
     });
 
-    // 🔹 GHI LOG LOGIN
+    // GHI LOG LOGIN
     await AuthLog.create({
       userId: user._id,
       action: 'LOGIN',

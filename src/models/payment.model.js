@@ -30,8 +30,8 @@ const paymentSchema = new mongoose.Schema({
   },
 
   createdAt: { type: Date, default: Date.now },
-  approvedAt: { type: Date, default: null }, // 🔥 NGÀY BẮT ĐẦU
-  expiresAt: { type: Date, default: null }, // 🔥 NGÀY HẾT HẠN
+  approvedAt: { type: Date, default: null }, // NGÀY BẮT ĐẦU
+  expiresAt: { type: Date, default: null }, // NGÀY HẾT HẠN
 });
 
 export default mongoose.model('PAYMENT', paymentSchema, 'PAYMENT');

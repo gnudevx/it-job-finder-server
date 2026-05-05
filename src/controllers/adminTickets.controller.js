@@ -2,9 +2,9 @@ import SupportReport from '../models/SupportReportSchema.module.js';
 import Feedback from '../models/Feedback.module.js';
 import Notification from '../models/notification.model.js';
 import mongoose from 'mongoose';
-// ==========================
+
 // 1) Lấy toàn bộ ticket
-// ==========================
+
 export const getAdminTickets = async (req, res) => {
   try {
     const supports = await SupportReport.find().lean();

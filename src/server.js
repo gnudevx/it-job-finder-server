@@ -28,11 +28,11 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log('Socket connected: ', socket.id);
 
-  // 🧠 join room
+  // join room
   socket.on('join-conversation', (conversationId) => {
     socket.join(conversationId);
   });
-  // 💬 gửi tin nhắn
+  // gửi tin nhắn
   socket.on('send-message', async ({ conversationId, message }) => {
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) return;
@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
       console.log('❌ Sender không thuộc conversation');
       return;
     }
-    // 👉 update DB
+    // update DB
     const updated = await Conversation.findByIdAndUpdate(
       conversationId,
       {
@@ -62,7 +62,7 @@ io.on('connection', (socket) => {
       { new: true },
     );
 
-    // 🔥 gửi luôn unreadCount về client
+    // gửi luôn unreadCount về client
     io.to(conversationId).emit('receive-message', {
       ...message,
       unreadCount: updated.unreadCount,
@@ -82,7 +82,7 @@ io.on('connection', (socket) => {
     const employer = await Employer.findById(conversation.employerId);
     const candidate = await Candidate.findById(conversation.candidateId);
 
-    // ✅ khai báo trước, dùng sau
+    // khai báo trước, dùng sau
     const isEmployerCaller = String(employer.userId) === String(callerId);
 
     const calleeUserId = isEmployerCaller
@@ -133,7 +133,7 @@ io.on('connection', (socket) => {
     callTimeouts.set(conversationId, timeout);
   });
 
-  // 📡 Bước 2: Signaling WebRTC (giữ nguyên)
+  // Bước 2: Signaling WebRTC (giữ nguyên)
   socket.on('call:offer', ({ conversationId, sdp }) => {
     socket.to(conversationId).emit('call:offer', { sdp });
   });
@@ -149,7 +149,7 @@ io.on('connection', (socket) => {
     clearTimeout(callTimeouts.get(conversationId));
     callTimeouts.delete(conversationId);
 
-    // 👇 THÊM: báo cho caller biết callee đã sẵn sàng
+    // THÊM: báo cho caller biết callee đã sẵn sàng
     socket.to(conversationId).emit('call:accepted', { conversationId });
   });
   socket.on('call:answer', ({ conversationId, sdp }) => {
@@ -170,7 +170,7 @@ io.on('connection', (socket) => {
     socket.to(conversationId).emit('call:ice-candidate', { candidate });
   });
 
-  // ❌ Bước 3a: Callee chủ động từ chối
+  // Bước 3a: Callee chủ động từ chối
   socket.on('call:decline', async ({ conversationId }) => {
     clearTimeout(callTimeouts.get(conversationId));
     callTimeouts.delete(conversationId);
@@ -195,14 +195,14 @@ io.on('connection', (socket) => {
     });
   });
 
-  // 📵 Bước 3b: Kết thúc cuộc gọi đang diễn ra
+  // Bước 3b: Kết thúc cuộc gọi đang diễn ra
   socket.on('call:end', async ({ conversationId }) => {
     const session = callSessions.get(conversationId);
 
-    // ❌ nếu đã xử lý rồi thì bỏ
+    // nếu đã xử lý rồi thì bỏ
     if (!session || session.ended) return;
 
-    session.ended = true; // 🔥 đánh dấu
+    session.ended = true; // đánh dấu
 
     clearTimeout(callTimeouts.get(conversationId));
     callTimeouts.delete(conversationId);

@@ -4,7 +4,7 @@ import Message from '../models/message.model.js';
 import uploadChatFile from '../middlewares/uploadChatFile.middleware.js';
 const router = express.Router();
 
-// 🔥 đánh dấu đã đọc
+// đánh dấu đã đọc
 router.post('/mark-as-read', markAsRead);
 
 router.post('/send-file', uploadChatFile.single('file'), async (req, res) => {

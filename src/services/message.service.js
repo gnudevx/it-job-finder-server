@@ -4,7 +4,7 @@ import Conversation from '../models/conversation.model.js';
 export const getMessages = async (conversationId, cursor) => {
   const query = { conversationId };
 
-  // 👇 chỉ thêm cursor khi có
+  // chỉ thêm cursor khi có
   if (cursor) {
     query._id = { $lt: cursor };
   }
@@ -27,12 +27,12 @@ export const sendMessage = async ({
     text,
   });
 
-  // 🔥 LẤY conversation ra
+  // LẤY conversation ra
   const conversation = await Conversation.findById(conversationId);
 
   if (!conversation) throw new Error('Conversation not found');
 
-  // 🔥 update dữ liệu
+  // update dữ liệu
   conversation.lastMessage = text;
   conversation.lastMessageTime = new Date();
 

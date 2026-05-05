@@ -10,7 +10,7 @@ export const employerSearchCV = async (req, res) => {
     const employerId = employer._id; // lấy từ JWT
     const { q = '', skills = '' } = req.query;
 
-    // 1️⃣ Lấy job của employer
+    // Lấy job của employer
     const jobs = await Job.find({ employer_id: employerId })
       .select('_id')
       .lean();
@@ -19,7 +19,7 @@ export const employerSearchCV = async (req, res) => {
     console.log('JOBS:', jobs);
     if (!jobIds.length) return res.json([]);
 
-    // 2️⃣ Lấy application thuộc các job đó
+    // Lấy application thuộc các job đó
     const applications = await Application.find({ jobId: { $in: jobIds } })
       .populate('resumeId')
       .populate({
@@ -30,18 +30,18 @@ export const employerSearchCV = async (req, res) => {
     console.log('APPLICATIONS:', applications);
     if (!applications.length) return res.json([]);
 
-    // 3️⃣ Lấy resumeId
+    // Lấy resumeId
     const applicationsWithResume = applications.filter(
       (a) => a.resumeId && a.resumeId._id,
     );
     const resumeIds = applicationsWithResume.map((a) => a.resumeId._id);
 
-    // 4️⃣ Lấy parsed resume
+    // Lấy parsed resume
     let parsedResumes = await ParsedResume.find({
       resumeId: { $in: resumeIds },
     }).lean();
 
-    // 5️⃣ FILTER theo skills
+    // FILTER theo skills
     if (skills) {
       const skillArr = skills.split(',').map((s) => s.trim().toLowerCase());
       parsedResumes = parsedResumes.filter((r) =>
@@ -49,7 +49,7 @@ export const employerSearchCV = async (req, res) => {
       );
     }
 
-    // 6️⃣ MAP DATA CHO UI
+    // MAP DATA CHO UI
     const result = parsedResumes
       .map((pr) => {
         const app = applicationsWithResume.find(
@@ -74,7 +74,7 @@ export const employerSearchCV = async (req, res) => {
       })
       .filter(Boolean);
 
-    // 7️⃣ SEARCH TEXT
+    // SEARCH TEXT
     const keyword = q.toLowerCase();
     const filtered = keyword
       ? result.filter(
