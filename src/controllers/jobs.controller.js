@@ -1,19 +1,118 @@
 import Job from '../models/jobs.model.js';
 import * as jobService from '../services/jobs.service.js';
 import Employer from '../models/employer.model.js';
+import Location from '../models/location.model.js';
+import Skill from '../models/skill.model.js';
 import { getJobLimitStatus } from '../services/jobLimitService.service.js';
+
+const escapeRegExp = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // Lấy toàn bộ job (dạng phẳng)
 export const getJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({ visibility: 'visible' })
-      .populate('location')
-      .populate('skills')
-      .populate('group_id')
-      .populate('employer_id');
+    const {
+      q = '',
+      location = '',
+      experience = '',
+      salaryLevel = '',
+      skills = '',
+      createDate = '',
+      page = 1,
+      limit = 20,
+    } = req.query;
+
+    const filter = { visibility: 'visible' };
+
+    if (location) {
+      const locationDocs = await Location.find({
+        name: { $regex: new RegExp(escapeRegExp(location), 'i') },
+      }).select('_id');
+
+      if (!locationDocs.length) {
+        return res.status(200).json({ success: true, data: [], totalPages: 0 });
+      }
+
+      filter.location = { $in: locationDocs.map((l) => l._id) };
+    }
+
+    if (skills) {
+      const skillArr = String(skills)
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const skillDocs = await Skill.find({
+        name: {
+          $in: skillArr.map((s) => new RegExp(`^${escapeRegExp(s)}$`, 'i')),
+        },
+      }).select('_id');
+
+      const skillIds = skillDocs.map((s) => s._id);
+
+      filter.$or = [
+        { skills: { $in: skillArr } }, // for string skills
+        { skills: { $in: skillIds } }, // for ObjectId skills
+      ];
+    }
+
+    if (experience) {
+      filter.experience = new RegExp(escapeRegExp(experience), 'i');
+    }
+
+    if (createDate) {
+      const days = Number(createDate);
+      if (!isNaN(days)) {
+        filter.createdAt = {
+          $gte: new Date(Date.now() - days * 86400000),
+        };
+      }
+    }
+
+    if (q) {
+      const keyword = new RegExp(escapeRegExp(q), 'i');
+      filter.$or = [
+        { title: keyword },
+        { jobDescription: keyword },
+        { specialization: keyword },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [jobs, total] = await Promise.all([
+      Job.find(filter)
+        .select(
+          'title salary_raw location skills group_id employer_id createdAt',
+        )
+        .populate('location')
+        .populate('group_id')
+        .populate('employer_id')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(Number(limit))
+        .lean(),
+
+      Job.countDocuments(filter),
+    ]);
+
+    if (salaryLevel) {
+      const threshold = Number(salaryLevel);
+      if (!Number.isNaN(threshold)) {
+        jobs = jobs.filter((job) => {
+          const salary = parseInt(
+            (job.salary_raw || '').replace(/\D/g, ''),
+            10,
+          );
+          return Number.isNaN(salary) ? false : salary >= threshold;
+        });
+      }
+    }
 
     return res.status(200).json({
       success: true,
       data: jobs,
+      totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
     return res.status(500).json({
