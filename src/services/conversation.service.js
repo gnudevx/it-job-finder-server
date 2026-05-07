@@ -48,7 +48,6 @@ const formatLastMessage = (msg) => {
         return '📞 Cuộc gọi';
     }
   }
-
   return '';
 };
 
