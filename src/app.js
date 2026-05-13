@@ -41,12 +41,14 @@ import companyRouter from './routes/company.routes.js';
 import employerConversation from './routes/employer/conversation.router.js';
 import candidateConversation from './routes/candidate/conversation.router.js';
 import message from './routes/message.routes.js';
+import employerSearchCV from './routes/employer/search-cv.js';
+// AI router
+import aiRouter from './routes/ai.route.js';
 
 import './models/skill.model.js';
 import './models/location.model.js';
 import './models/jobGroup.model.js';
 import './models/jobs.model.js';
-import employerSearchCV from './routes/employer/search-cv.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,6 +73,8 @@ app.use(cookieParser());
 
 // ROUTES
 app.use('/api/auth', authRoutes);
+
+app.use('/api', verifyAccessToken, httpLogger, aiRouter);
 
 app.use('/api/jobs', jobsRouter);
 app.use('/api/payments', payment);
