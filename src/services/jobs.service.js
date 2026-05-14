@@ -8,11 +8,9 @@ import * as JobRepository from '../repositories/jobs.repository.js';
 export const getAllJobGroups = async () => {
   return await JobsGroup.find({});
 };
-
 export const getJobsByGroup = async (groupName) => {
   return await JobsGroup.findOne({ group: groupName });
 };
-
 export const createJobService = async (form, employerId) => {
   try {
     // 1. Lấy ObjectId của location
