@@ -1,4 +1,6 @@
 import Jobs from '../models/jobs.model.js';
+import Resume from '../models/resumes.model.js';
+import ParsedResume from '../models/ParsedResumeSchema.module.js';
 import { cosineSimilarity } from '../utils/cosineSimilarity.js';
 
 export const recommendJobsService = async (jobId) => {
@@ -20,7 +22,7 @@ export const recommendJobsService = async (jobId) => {
   })
     .select('title salary_raw location embedding')
     .populate('location', 'name')
-    .limit(300)
+    .sort({ createdAt: -1 })
     .lean();
 
   const scored = [];
@@ -55,4 +57,81 @@ export const recommendJobsService = async (jobId) => {
   scored.sort((a, b) => b.similarity - a.similarity);
 
   return scored.slice(0, 5);
+};
+
+export const recommendCvsForJob = async (jobId, limit = 10) => {
+  const job = await Jobs.findById(jobId).lean();
+
+  if (!job) {
+    throw new Error('Job not found');
+  }
+
+  if (!job.embedding || job.embedding.length === 0) {
+    return [];
+  }
+
+  const resumes = await Resume.find({
+    embedding: { $exists: true, $ne: [] },
+  })
+    .select('candidateId fileName fileType embedding')
+    .populate('candidateId', 'fullName')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  if (!resumes.length) {
+    return [];
+  }
+
+  const resumeIds = resumes.map((resume) => resume._id);
+  const parsedResumes = await ParsedResume.find({
+    resumeId: { $in: resumeIds },
+  })
+    .select('resumeId skills summary shortSummary')
+    .lean();
+
+  const parsedByResumeId = new Map(
+    parsedResumes.map((parsed) => [parsed.resumeId.toString(), parsed]),
+  );
+
+  const recommendations = [];
+
+  for (const resume of resumes) {
+    if (!resume.embedding) continue;
+    if (resume.embedding.length !== job.embedding.length) continue;
+
+    const parsed = parsedByResumeId.get(resume._id.toString());
+    if (!parsed) continue;
+
+    let similarity;
+    try {
+      similarity = cosineSimilarity(job.embedding, resume.embedding);
+    } catch (err) {
+      console.error(
+        `Error calculating similarity for resume ${resume._id}:`,
+        err,
+      );
+      continue;
+    }
+
+    if (Number.isNaN(similarity)) continue;
+
+    recommendations.push({
+      resumeId: resume._id,
+      candidateId:
+        typeof resume.candidateId === 'object'
+          ? resume.candidateId._id
+          : resume.candidateId,
+      candidateName: resume.candidateId?.fullName || '',
+      jobTitle: job.title,
+      fileName: resume.fileName,
+      fileType: resume.fileType,
+      skills: parsed.skills || [],
+      summary: parsed.summary || parsed.shortSummary || '',
+      matchScore: Number(similarity.toFixed(4)),
+    });
+  }
+
+  recommendations.sort((a, b) => b.matchScore - a.matchScore);
+
+  return recommendations.slice(0, limit);
 };

@@ -6,16 +6,22 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/resumes/');
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname); // .pdf
-    const name = path.basename(file.originalname, ext); // filename không có .pdf
+    const ext = path.extname(file.originalname); // .pdf, .docx, .doc
+    const name = path.basename(file.originalname, ext); // filename không có extension
 
     cb(null, `${Date.now()}-${name}${ext}`);
   },
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype !== 'application/pdf') {
-    return cb(new Error('Only PDF files are allowed!'), false);
+  const allowedMimeTypes = [
+    'application/pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+    'application/msword', // .doc (older format)
+  ];
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return cb(new Error('Only PDF and DOCX files are allowed!'), false);
   }
   cb(null, true);
 };

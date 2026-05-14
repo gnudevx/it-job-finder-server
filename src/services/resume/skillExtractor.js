@@ -139,6 +139,10 @@ const SKILL_DICTIONARY = [
   { key: 'junit', aliases: ['junit', 'unit testing'], category: 'other' },
 ];
 
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function extractSkills(text) {
   const lower = text.toLowerCase();
   const result = new Set();
@@ -146,7 +150,8 @@ export function extractSkills(text) {
   for (const skill of SKILL_DICTIONARY) {
     for (const alias of skill.aliases) {
       // Use word boundary regex to avoid false matches (e.g., "java" should not match "javascript")
-      const regex = new RegExp(`\\b${alias}\\b`, 'gi');
+      const escapedAlias = escapeRegExp(alias);
+      const regex = new RegExp(`\\b${escapedAlias}\\b`, 'gi');
       if (regex.test(lower)) {
         result.add(skill.key);
         break;
@@ -163,7 +168,8 @@ export function extractSkillsWithCategories(text) {
 
   for (const skill of SKILL_DICTIONARY) {
     for (const alias of skill.aliases) {
-      const regex = new RegExp(`\\b${alias}\\b`, 'gi');
+      const escapedAlias = escapeRegExp(alias);
+      const regex = new RegExp(`\\b${escapedAlias}\\b`, 'gi');
       if (regex.test(lower)) {
         result.set(skill.key, skill.category);
         break;

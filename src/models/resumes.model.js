@@ -12,6 +12,14 @@ const ResumeSchema = new mongoose.Schema(
     fileName: { type: String, required: true },
     fileType: { type: String, default: 'pdf' }, // pdf | docx …
     size: { type: Number, required: true },
+    embedding: {
+      type: [Number],
+      default: [],
+    },
+    skills: {
+      type: [String],
+      default: [],
+    },
 
     isDefault: { type: Boolean, default: false }, // CV mặc định
   },

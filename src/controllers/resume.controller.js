@@ -18,11 +18,22 @@ export const uploadResume = async (req, res) => {
       return res.status(400).json({ message: 'File is required' });
     }
 
+    // Detect file type from MIME type
+    let fileType = 'pdf';
+    if (
+      req.file.mimetype ===
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ) {
+      fileType = 'docx';
+    } else if (req.file.mimetype === 'application/msword') {
+      fileType = 'doc';
+    }
+
     const newResume = await Resume.create({
       candidateId,
       fileUrl: `/uploads/resumes/${req.file.filename}`,
       fileName: req.file.originalname,
-      fileType: 'pdf',
+      fileType,
       size: req.file.size,
       isDefault: false,
     });
@@ -105,7 +116,7 @@ export const downloadResume = async (req, res) => {
       return res.status(404).json({ message: 'File not found on server' });
     }
 
-    res.download(filePath, resume.fileName || 'CV.pdf');
+    res.download(filePath, resume.fileName);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Download failed' });
