@@ -31,11 +31,9 @@ const formatLastMessage = (msg) => {
   if (msg.type === 'text') {
     return msg.text;
   }
-
   if (msg.type === 'file') {
     return '📎 File'; // 🔥 FIX CHÍNH
   }
-
   if (msg.type === 'call') {
     switch (msg.callStatus) {
       case 'missed':
