@@ -75,6 +75,9 @@ app.use(cookieParser());
 // ROUTES
 app.use('/api/auth', authRoutes);
 
+// Mount public jobs route before the global '/api' protected middleware
+app.use('/api/jobs', jobsRouter);
+
 app.use('/api', verifyAccessToken, httpLogger, aiRouter);
 
 app.use('/api/jobs', jobsRouter);

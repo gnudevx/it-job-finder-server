@@ -112,6 +112,7 @@ export const getJobs = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: jobs,
+      total,
       totalPages: Math.ceil(total / limit),
     });
   } catch (err) {
