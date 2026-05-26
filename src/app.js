@@ -69,7 +69,13 @@ app.use(
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(helmet());
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    frameguard: false,
+    crossOriginOpenerPolicy: false,
+  }),
+);
 app.use(cookieParser());
 
 // ROUTES
@@ -147,7 +153,7 @@ app.use(
   applyJobRouter,
 );
 app.use('/company', companyRouter);
-app.use('/api/resumes', verifyAccessToken, httpLogger, resumeRouter);
+app.use('/api/resumes', httpLogger, resumeRouter);
 app.use('/api/resumes/downloads', resumeRouterDowloads);
 
 app.use('/api/user', verifyAccessToken, httpLogger, userRoutes);
