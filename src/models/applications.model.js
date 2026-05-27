@@ -20,7 +20,11 @@ const ApplicationSchema = new mongoose.Schema(
       required: true,
     },
 
-    coverLetter: { type: String, default: '' },
+    note: {
+      type: String,
+      default: '',
+      maxlength: 500,
+    },
 
     status: {
       type: String,

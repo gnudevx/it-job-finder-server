@@ -3,12 +3,7 @@ import Application from '../models/applications.model.js';
 import Jobs from '../models/jobs.model.js';
 import Resume from '../models/resumes.model.js';
 
-export const applyToJob = async ({
-  candidateId,
-  jobId,
-  resumeId,
-  coverLetter,
-}) => {
+export const applyToJob = async ({ candidateId, jobId, resumeId, note }) => {
   // 1. Kiểm tra job có tồn tại không
   const job = await Jobs.findById(jobId);
   if (!job) {
@@ -32,7 +27,7 @@ export const applyToJob = async ({
     candidateId,
     jobId,
     resumeId,
-    coverLetter: coverLetter || '',
+    note: note || '',
     status: 'applied',
     appliedAt: new Date(),
     updatedAt: new Date(),

@@ -4,7 +4,7 @@ import Application from '../models/applications.model.js';
 import { parseAndSaveResume } from '../services/parseResume.service.js';
 export const applyJobController = async (req, res) => {
   try {
-    const { jobId, resumeId, coverLetter } = req.body;
+    const { jobId, resumeId, note } = req.body;
 
     if (!jobId || !resumeId) {
       return res
@@ -25,7 +25,7 @@ export const applyJobController = async (req, res) => {
       candidateId: candidate._id, // đây mới là Candidate._id
       jobId,
       resumeId,
-      coverLetter,
+      note,
     });
     parseAndSaveResume(resumeId)
       .then(() => {

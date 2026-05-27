@@ -198,7 +198,7 @@ export const employerSearchCV = async (req, res) => {
           parsed?.shortSummary,
           rawText,
           (parsed?.skills || []).join(' '),
-          app.coverLetter,
+          app.note,
           job.title,
           job.level,
           job.education,
