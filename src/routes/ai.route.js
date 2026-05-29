@@ -2,12 +2,11 @@
 // Node.js nhận request từ React, verify JWT, forward sang FastAPI
 
 import express from 'express';
+import axios from 'axios';
+import FormData from 'form-data';
 
 const router = express.Router();
 const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000';
-
-// Dùng FormData của Web API (Node 18+) thay vì form-data package
-const { FormData, Blob } = await import('node-fetch');
 
 import multer from 'multer';
 const upload = multer({ storage: multer.memoryStorage() }); // giữ file trong RAM
@@ -104,31 +103,43 @@ router.post('/cv/upload', upload.single('file'), async (req, res) => {
     console.log('user:', req.user);
     console.log('file:', req.file?.originalname);
 
-    if (!req.file) return res.status(400).json({ message: 'Chưa chọn file' });
+    if (!req.file) {
+      return res.status(400).json({
+        message: 'Chưa chọn file',
+      });
+    }
 
     const formData = new FormData();
-    const blob = new Blob([req.file.buffer], { type: req.file.mimetype });
-    formData.append('file', blob, req.file.originalname);
 
-    console.log('Calling FastAPI at:', `${FASTAPI_URL}/api/cv/upload`);
-
-    const response = await fetch(`${FASTAPI_URL}/api/cv/upload`, {
-      method: 'POST',
-      headers: {
-        'X-User-Id': req.user?.userId,
-        'X-User-Role': req.user?.role || 'user',
-      },
-      body: formData,
+    formData.append('file', req.file.buffer, {
+      filename: req.file.originalname,
+      contentType: req.file.mimetype,
     });
 
-    console.log('FastAPI status:', response.status);
-    const rawText = await response.text();
-    console.log('FastAPI response:', rawText);
+    const response = await axios.post(
+      `${FASTAPI_URL}/api/cv/upload`,
+      formData,
+      {
+        headers: {
+          ...formData.getHeaders(),
+          'X-User-Id': req.user?.userId,
+          'X-User-Role': req.user?.role || 'user',
+        },
+      },
+    );
 
-    return res.status(response.status).json(JSON.parse(rawText));
+    console.log('FastAPI status:', response.status);
+    console.log('FastAPI response:', response.data);
+
+    return res.status(response.status).json(response.data);
   } catch (err) {
-    console.error('CV upload error:', err.message);
-    return res.status(502).json({ message: 'Lỗi upload CV' });
+    console.error('CV upload error:', err.response?.data || err.message);
+
+    return res.status(err.response?.status || 502).json(
+      err.response?.data || {
+        message: 'Lỗi upload CV',
+      },
+    );
   }
 });
 
