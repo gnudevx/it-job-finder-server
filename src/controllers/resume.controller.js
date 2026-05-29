@@ -5,9 +5,8 @@ import {
   deleteResumeService,
   setDefaultResumeService,
   getResumeFileService,
+  recommendResumeService,
 } from '../services/resume/resume.service.js';
-
-import { recommendJobsForResume } from '../services/resume/recommendResume.service.js';
 
 export const uploadResume = async (req, res) => {
   try {
@@ -111,14 +110,14 @@ export const downloadResume = async (req, res) => {
 
 export const recommendResume = async (req, res) => {
   try {
-    const data = await recommendJobsForResume(req.params.id);
+    const data = await recommendResumeService(req.params.id);
 
     return res.status(200).json(data);
   } catch (err) {
-    console.error(err);
+    console.error('recommendResume error:', err);
 
     return res.status(500).json({
-      message: 'Recommend CV thất bại',
+      message: err.message || 'Recommend CV thất bại',
     });
   }
 };
