@@ -97,19 +97,22 @@ export const adminChangeEmployerPasswordController = async (req, res, next) => {
 export const getAllEmployersWithJobLimit = async (req, res) => {
   try {
     const employers = await Employer.find()
-      .populate('userId', 'fullName email status') // lấy thông tin user
+      .populate('userId', 'fullName email status')
       .lean();
+
+    // Loại recruiter bị mất user
+    const validEmployers = employers.filter((e) => e.userId);
 
     const startOfMonth = moment().startOf('month').toDate();
     const endOfMonth = moment().endOf('month').toDate();
 
     const data = await Promise.all(
-      employers.map(async (employer) => {
+      validEmployers.map(async (employer) => {
         const jobCountThisMonth = await Job.countDocuments({
           employer_id: employer._id,
           createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-          publishStatus: { $in: ['approved', 'pending'] }, // chiếm slot
-          visibility: { $in: ['visible', 'hidden'] }, // optional: hidden cũng chiếm slot
+          publishStatus: { $in: ['approved', 'pending'] },
+          visibility: { $in: ['visible', 'hidden'] },
         });
 
         const remaining = employer.maxPosts - jobCountThisMonth;
@@ -123,9 +126,14 @@ export const getAllEmployersWithJobLimit = async (req, res) => {
       }),
     );
 
-    return res.json({ success: true, data });
+    return res.json({
+      success: true,
+      data,
+    });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({
+      message: 'Server error',
+    });
   }
 };
