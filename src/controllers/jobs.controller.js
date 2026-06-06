@@ -80,14 +80,21 @@ export const getJobs = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const [jobs, total] = await Promise.all([
+    let [jobs, total] = await Promise.all([
       Job.find(filter)
         .select(
           'title salary_raw location skills group_id employer_id createdAt',
         )
         .populate('location')
         .populate('group_id')
-        .populate('employer_id')
+        .populate({
+          path: 'employer_id',
+          select: 'avatar companyId',
+          populate: {
+            path: 'companyId',
+            select: 'name logo',
+          },
+        })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(Number(limit))
