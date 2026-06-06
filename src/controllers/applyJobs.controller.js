@@ -59,7 +59,17 @@ export const getMyAppliedJobsController = async (req, res) => {
         populate: [
           { path: 'location', model: 'Location', strictPopulate: false },
           { path: 'group_id', model: 'JobGroup', strictPopulate: false },
-          { path: 'employer_id', model: 'employer', strictPopulate: false },
+          {
+            path: 'employer_id',
+            model: 'employer',
+            strictPopulate: false,
+            select: 'avatar companyId',
+            populate: {
+              path: 'companyId',
+              model: 'COMPANY',
+              select: 'logo',
+            },
+          },
         ],
       })
       .populate('resumeId');
