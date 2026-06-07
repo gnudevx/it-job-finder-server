@@ -74,6 +74,7 @@ app.use(
     contentSecurityPolicy: false,
     frameguard: false,
     crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   }),
 );
 app.use(cookieParser());
