@@ -4,12 +4,7 @@
 
 **Nền tảng tìm kiếm việc làm IT được xây dựng theo kiến trúc RESTful API hiện đại**
 
-[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Express](https://img.shields.io/badge/Express-v5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongoosejs.com/)
-[![Socket.IO](https://img.shields.io/badge/Socket.IO-v4.x-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/)
-[![JWT](https://img.shields.io/badge/Auth-JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](https://opensource.org/licenses/ISC)
+[![Node.js](https://img.shields.io/badge/Node.js-v18%2B-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/) [![Express](https://img.shields.io/badge/Express-v5.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/) [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://mongoosejs.com/) [![Socket.IO](https://img.shields.io/badge/Socket.IO-v4.x-010101?style=for-the-badge&logo=socket.io&logoColor=white)](https://socket.io/) [![JWT](https://img.shields.io/badge/Auth-JWT-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)](https://jwt.io/) [![License: ISC](https://img.shields.io/badge/License-ISC-blue?style=for-the-badge)](https://opensource.org/licenses/ISC)
 
 [Tính năng](#-tính-năng-nổi-bật) · [Kiến trúc](#-kiến-trúc-hệ-thống) · [Cài đặt](#-hướng-dẫn-cài-đặt) · [API Docs](#-api-endpoints) · [Sơ đồ tư duy](#-sơ-đồ-tư-duy-dự-án)
 
@@ -32,7 +27,7 @@ Dự án được xây dựng với mục tiêu **scalable**, **maintainable** v
 ## ✨ Tính năng nổi bật
 
 | Nhóm tính năng | Chi tiết |
-|---|---|
+| --- | --- |
 | 🔐 **Xác thực & Phân quyền** | JWT (Access + Refresh Token), Google OAuth 2.0, bcrypt password hashing |
 | 📄 **Phân tích CV thông minh** | Đọc file PDF (`pdf-parse`) và Word (`mammoth`), tự động trích xuất thông tin |
 | 💬 **Realtime Chat** | Socket.IO cho phép nhà tuyển dụng và ứng viên trao đổi trực tiếp |
@@ -173,44 +168,44 @@ IT Job Finder Server
 
 ### Core
 
-| Công nghệ | Phiên bản | Mục đích |
-|---|---|---|
-| **Node.js** | v18+ | Runtime |
-| **Express** | v5.x | HTTP Framework |
-| **MongoDB** | Latest | Database |
-| **Mongoose** | v8.x | ODM |
+| Công nghệ    | Phiên bản | Mục đích       |
+| ------------ | --------- | -------------- |
+| **Node.js**  | v18+      | Runtime        |
+| **Express**  | v5.x      | HTTP Framework |
+| **MongoDB**  | Latest    | Database       |
+| **Mongoose** | v8.x      | ODM            |
 
 ### Authentication & Security
 
-| Thư viện | Mục đích |
-|---|---|
-| `jsonwebtoken` | Tạo & verify JWT |
-| `bcrypt` / `bcryptjs` | Mã hoá mật khẩu |
-| `google-auth-library` | Xác thực Google OAuth |
-| `helmet` | Bảo mật HTTP headers |
-| `cors` | Kiểm soát cross-origin |
-| `zod` | Validate dữ liệu đầu vào |
+| Thư viện              | Mục đích                 |
+| --------------------- | ------------------------ |
+| `jsonwebtoken`        | Tạo & verify JWT         |
+| `bcrypt` / `bcryptjs` | Mã hoá mật khẩu          |
+| `google-auth-library` | Xác thực Google OAuth    |
+| `helmet`              | Bảo mật HTTP headers     |
+| `cors`                | Kiểm soát cross-origin   |
+| `zod`                 | Validate dữ liệu đầu vào |
 
 ### File Processing
 
-| Thư viện | Mục đích |
-|---|---|
-| `multer` | Upload file |
-| `pdf-parse` | Đọc nội dung PDF |
-| `mammoth` | Đọc nội dung DOCX |
-| `franc` | Phát hiện ngôn ngữ văn bản |
+| Thư viện    | Mục đích                   |
+| ----------- | -------------------------- |
+| `multer`    | Upload file                |
+| `pdf-parse` | Đọc nội dung PDF           |
+| `mammoth`   | Đọc nội dung DOCX          |
+| `franc`     | Phát hiện ngôn ngữ văn bản |
 
 ### Real-time & Others
 
-| Thư viện | Mục đích |
-|---|---|
-| `socket.io` | WebSocket / real-time |
-| `winston` | Structured logging |
-| `winston-daily-rotate-file` | Rotate log files |
-| `morgan` | HTTP request logger |
-| `moment` | Xử lý ngày giờ |
-| `axios` | HTTP client |
-| `dotenv` | Quản lý biến môi trường |
+| Thư viện                    | Mục đích                |
+| --------------------------- | ----------------------- |
+| `socket.io`                 | WebSocket / real-time   |
+| `winston`                   | Structured logging      |
+| `winston-daily-rotate-file` | Rotate log files        |
+| `morgan`                    | HTTP request logger     |
+| `moment`                    | Xử lý ngày giờ          |
+| `axios`                     | HTTP client             |
+| `dotenv`                    | Quản lý biến môi trường |
 
 ---
 
@@ -284,46 +279,46 @@ Server khởi động tại: `http://localhost:8080`
 
 ### Auth
 
-| Method | Endpoint | Mô tả | Auth |
-|---|---|---|---|
-| `POST` | `/auth/register` | Đăng ký tài khoản | ❌ |
-| `POST` | `/auth/login` | Đăng nhập | ❌ |
-| `POST` | `/auth/google` | Đăng nhập Google OAuth | ❌ |
-| `POST` | `/auth/refresh` | Làm mới Access Token | ❌ |
-| `POST` | `/auth/logout` | Đăng xuất | ✅ |
+| Method | Endpoint         | Mô tả                  | Auth |
+| ------ | ---------------- | ---------------------- | ---- |
+| `POST` | `/auth/register` | Đăng ký tài khoản      | ❌   |
+| `POST` | `/auth/login`    | Đăng nhập              | ❌   |
+| `POST` | `/auth/google`   | Đăng nhập Google OAuth | ❌   |
+| `POST` | `/auth/refresh`  | Làm mới Access Token   | ❌   |
+| `POST` | `/auth/logout`   | Đăng xuất              | ✅   |
 
 ### User / Profile
 
-| Method | Endpoint | Mô tả | Auth |
-|---|---|---|---|
-| `GET` | `/users/me` | Lấy thông tin cá nhân | ✅ |
-| `PUT` | `/users/me` | Cập nhật profile | ✅ |
-| `POST` | `/users/me/avatar` | Upload ảnh đại diện | ✅ |
+| Method | Endpoint           | Mô tả                 | Auth |
+| ------ | ------------------ | --------------------- | ---- |
+| `GET`  | `/users/me`        | Lấy thông tin cá nhân | ✅   |
+| `PUT`  | `/users/me`        | Cập nhật profile      | ✅   |
+| `POST` | `/users/me/avatar` | Upload ảnh đại diện   | ✅   |
 
 ### Jobs
 
-| Method | Endpoint | Mô tả | Auth |
-|---|---|---|---|
-| `GET` | `/jobs` | Danh sách việc làm (có filter) | ❌ |
-| `GET` | `/jobs/:id` | Chi tiết 1 tin tuyển dụng | ❌ |
-| `POST` | `/jobs` | Đăng tin tuyển dụng | ✅ Employer |
-| `PUT` | `/jobs/:id` | Cập nhật tin | ✅ Employer |
-| `DELETE` | `/jobs/:id` | Xoá tin | ✅ Employer |
+| Method   | Endpoint    | Mô tả                          | Auth        |
+| -------- | ----------- | ------------------------------ | ----------- |
+| `GET`    | `/jobs`     | Danh sách việc làm (có filter) | ❌          |
+| `GET`    | `/jobs/:id` | Chi tiết 1 tin tuyển dụng      | ❌          |
+| `POST`   | `/jobs`     | Đăng tin tuyển dụng            | ✅ Employer |
+| `PUT`    | `/jobs/:id` | Cập nhật tin                   | ✅ Employer |
+| `DELETE` | `/jobs/:id` | Xoá tin                        | ✅ Employer |
 
 ### CV & Applications
 
-| Method | Endpoint | Mô tả | Auth |
-|---|---|---|---|
-| `POST` | `/cv/upload` | Upload CV (PDF/DOCX) | ✅ |
-| `POST` | `/applications` | Ứng tuyển 1 vị trí | ✅ Candidate |
-| `GET` | `/applications` | Danh sách đơn ứng tuyển | ✅ |
+| Method | Endpoint        | Mô tả                   | Auth         |
+| ------ | --------------- | ----------------------- | ------------ |
+| `POST` | `/cv/upload`    | Upload CV (PDF/DOCX)    | ✅           |
+| `POST` | `/applications` | Ứng tuyển 1 vị trí      | ✅ Candidate |
+| `GET`  | `/applications` | Danh sách đơn ứng tuyển | ✅           |
 
 ### Messages (REST + Socket)
 
-| Method | Endpoint | Mô tả | Auth |
-|---|---|---|---|
-| `GET` | `/messages/:conversationId` | Lịch sử tin nhắn | ✅ |
-| `POST` | `/messages` | Gửi tin nhắn | ✅ |
+| Method | Endpoint                    | Mô tả            | Auth |
+| ------ | --------------------------- | ---------------- | ---- |
+| `GET`  | `/messages/:conversationId` | Lịch sử tin nhắn | ✅   |
+| `POST` | `/messages`                 | Gửi tin nhắn     | ✅   |
 
 ---
 
@@ -398,6 +393,7 @@ master ────────────────────────�
 ```
 
 Quy tắc commit message:
+
 ```
 feat:   Thêm tính năng mới
 fix:    Sửa bug

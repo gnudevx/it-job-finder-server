@@ -36,6 +36,7 @@ import CandidateNotification from './routes/candidate/notificationCandidate.rout
 import adminTickets from './routes/admin/adminTickets.route.js';
 import dashboardRoutes from './routes/admin/adminDashboard.routes.js';
 import payment from './routes/employer/payments.router.js';
+import { stripeWebhook } from './controllers/payment.controller.js';
 import accountActivity from './routes/accountActivity.route.js';
 import companyRouter from './routes/company.routes.js';
 import employerConversation from './routes/employer/conversation.router.js';
@@ -45,7 +46,7 @@ import employerSearchCV from './routes/employer/search-cv.js';
 // AI router
 import aiRouter from './routes/ai.route.js';
 import recommendRoutes from './routes/recommend.routes.js';
-
+import aiRecommendRoutes from './routes/aiRecommend.routes.js';
 import './models/skill.model.js';
 import './models/location.model.js';
 import './models/jobGroup.model.js';
@@ -67,6 +68,13 @@ app.use(
   }),
 );
 
+// ⚠️ Stripe webhook PHẢI nhận raw body (trước express.json)
+app.post(
+  '/api/payments/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  stripeWebhook,
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(
@@ -85,7 +93,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobsRouter);
 
 app.use('/api', verifyAccessToken, httpLogger, aiRouter);
-
+app.use('/api/ai', httpLogger, aiRecommendRoutes);
 app.use('/api/jobs', jobsRouter);
 app.use('/api/payments', payment);
 

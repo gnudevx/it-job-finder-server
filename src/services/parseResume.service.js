@@ -12,7 +12,7 @@ import { normalizeText } from './resume/normalizeText.js';
 import { extractFacts } from './resume/extractFacts.js';
 import { composeSummary } from './resume/summaryComposer.js';
 import { makeShortSummary } from './resume/shortSummaryExtractor.js';
-
+import { triggerEmbedCV } from './ai/embedTrigger.js';
 /**
  * Parse resume based on file type
  */
@@ -52,7 +52,15 @@ export async function parseAndSaveResume(resumeId) {
   const detectedRole = detectRole(rawText);
   const facts = extractFacts(rawText);
   const summary = composeSummary(facts);
-  const shortSummary = makeShortSummary(summary);
+  const shortSummary = makeShortSummary({
+    rawText,
+    detectedRole,
+    skills,
+    totalYearsExperience,
+    summary,
+    language,
+  });
+
   // 5️⃣ Save
   const parsed = await ParsedResume.create({
     resumeId,
@@ -65,6 +73,13 @@ export async function parseAndSaveResume(resumeId) {
     summary,
     shortSummary,
   });
-
+  // 6. Trigger Python embed — fire & forget, không await
+  // Không block response về cho user, Python tự xử lý nền
+  triggerEmbedCV(resumeId.toString()).catch((err) =>
+    console.error(
+      `[EmbedTrigger] Failed for resumeId ${resumeId}:`,
+      err.message,
+    ),
+  );
   return parsed;
 }

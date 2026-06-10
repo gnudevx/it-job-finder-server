@@ -23,6 +23,12 @@ const paymentSchema = new mongoose.Schema({
     default: 0, // fake payment => 0
   },
 
+  provider: {
+    type: String,
+    enum: ['MOMO', 'STRIPE'],
+    default: 'MOMO',
+  },
+
   status: {
     type: String,
     enum: ['pending', 'paid', 'approved', 'rejected'],

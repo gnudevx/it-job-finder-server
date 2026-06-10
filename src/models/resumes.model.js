@@ -16,6 +16,10 @@ const ResumeSchema = new mongoose.Schema(
       type: [Number],
       default: [],
     },
+    jdEmbedding: {
+      type: [Number],
+      default: [], // ← Luồng 2: HR tìm CV theo JD
+    },
     skills: {
       type: [String],
       default: [],
