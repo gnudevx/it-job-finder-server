@@ -10,7 +10,21 @@ export const getMyFavorites = async (req, res) => {
       (candidate) => candidate._id,
     );
 
-    const favorites = await Favorite.find({ candidateID }).populate('jobID');
+    const favorites = await Favorite.find({ candidateID }).populate({
+      path: 'jobID',
+      populate: [
+        { path: 'location' },
+        { path: 'group_id' },
+        {
+          path: 'employer_id',
+          select: 'avatar companyId',
+          populate: {
+            path: 'companyId',
+            select: 'logo',
+          },
+        },
+      ],
+    });
 
     res.status(200).json({ success: true, data: favorites });
   } catch (error) {

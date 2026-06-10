@@ -19,6 +19,9 @@ const fileFilter = (req, file, cb) => {
     'application/pdf',
     'image/png',
     'image/jpeg',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ];

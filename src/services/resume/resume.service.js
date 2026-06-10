@@ -3,6 +3,7 @@ import candidateService from '../candidate.service.js';
 import fs from 'fs';
 import path from 'path';
 import { parseAndSaveResume } from '../parseResume.service.js';
+import { recommendJobsForResume } from './recommendResume.service.js';
 
 export const uploadResumeService = async (userId, file) => {
   const candidate = await candidateService.getMyInfo(userId);
@@ -93,4 +94,51 @@ export const getResumeFileService = async (id) => {
     resume,
     filePath,
   };
+};
+
+export const recommendResumeService = async (resumeId) => {
+  if (process.env.CV_RECOMMEND_URL) {
+    const resume = await Resume.findById(resumeId);
+
+    if (!resume) {
+      throw new Error('CV không tồn tại');
+    }
+
+    const relativePath = resume.fileUrl.startsWith('/')
+      ? resume.fileUrl.slice(1)
+      : resume.fileUrl;
+
+    const filePath = path.join(process.cwd(), relativePath);
+
+    if (!fs.existsSync(filePath)) {
+      throw new Error('File không tồn tại');
+    }
+
+    const fileBuffer = await fs.promises.readFile(filePath);
+
+    const blob = new Blob([fileBuffer], {
+      type: 'application/pdf',
+    });
+
+    const formData = new FormData();
+
+    formData.append('file', blob, resume.fileName);
+
+    const response = await fetch(process.env.CV_RECOMMEND_URL, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+
+      console.error('Recommend service returned error:', response.status, text);
+
+      throw new Error('Dịch vụ gợi ý CV lỗi');
+    }
+
+    return response.json();
+  }
+
+  return recommendJobsForResume(resumeId);
 };
