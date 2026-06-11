@@ -12,7 +12,6 @@ export const getOrCreateConversation = async ({
   let convo = await Conversation.findOne({
     employerId,
     candidateId,
-    jobId,
   });
 
   if (!convo) {
@@ -33,6 +32,15 @@ const formatLastMessage = (msg) => {
   }
   if (msg.type === 'file') {
     return '📎 File'; // 🔥 FIX CHÍNH
+  }
+  if (msg.type === 'interview') {
+    return '📅 Lịch phỏng vấn';
+  }
+  if (msg.type === 'assignment') {
+    return '📝 Test Assignment';
+  }
+  if (msg.type === 'assignment_submit') {
+    return '✅ Nộp bài Assignment';
   }
   if (msg.type === 'call') {
     switch (msg.callStatus) {
@@ -56,7 +64,7 @@ export const getConversationsByEmployer = async (employerId) => {
     employerId,
     lastMessage: { $ne: '' },
   })
-    .populate('candidateId', 'fullName avatar')
+    .populate('candidateId', 'fullName avatar userId')
     .populate({
       path: 'jobId',
       select: 'title',
@@ -71,6 +79,7 @@ export const getConversationsByEmployer = async (employerId) => {
       const last = lastMsg[0];
       return {
         id: c.candidateId._id,
+        userId: c.candidateId.userId,
         name: c.candidateId.fullName,
         avatar: c.candidateId.avatar,
         position: c.jobId?.title,
@@ -95,7 +104,7 @@ export const getApplicationsByCandidate = async (candidateId) => {
       select: 'title employer_id',
       populate: {
         path: 'employer_id',
-        select: 'avatar companyId',
+        select: 'avatar companyId userId',
         populate: {
           path: 'companyId',
           select: 'name logo',
@@ -106,6 +115,7 @@ export const getApplicationsByCandidate = async (candidateId) => {
 
   return applications.map((app) => ({
     id: app.jobId.employer_id._id,
+    userId: app.jobId.employer_id.userId,
     name: app.jobId.employer_id.companyId?.name || 'Unknown Company',
     avatar:
       app.jobId.employer_id.companyId?.logo || app.jobId.employer_id.avatar,
@@ -121,7 +131,7 @@ export const getConversationsByCandidate = async (candidateId) => {
   })
     .populate({
       path: 'employerId',
-      select: 'avatar companyId',
+      select: 'avatar companyId userId',
       populate: {
         path: 'companyId',
         select: 'name logo',
@@ -144,6 +154,7 @@ export const getConversationsByCandidate = async (candidateId) => {
       return {
         position: c.jobId?.title,
         id: c.employerId?._id,
+        userId: c.employerId?.userId,
         name: c.employerId?.companyId?.name || 'Unknown Company',
         avatar: c.employerId?.companyId?.logo || c.employerId?.avatar,
         lastMessage: last ? formatLastMessage(last) : c.lastMessage || '',
@@ -182,7 +193,7 @@ export const getApplicationsByEmployer = async (employerId) => {
     jobId: { $in: jobIds },
     appliedAt: { $gte: last7Days },
   })
-    .populate('candidateId', 'candidateId fullName avatar') // chỉ lấy 2 field
+    .populate('candidateId', 'candidateId fullName avatar userId') // chỉ lấy 3 field
     .select('jobId appliedAt candidateId')
     .sort({ appliedAt: -1 });
 
@@ -208,6 +219,7 @@ export const getApplicationsByEmployer = async (employerId) => {
       jobId: app.jobId,
       candidate: {
         candidateId: app.candidateId?._id,
+        userId: app.candidateId?.userId,
         fullName: app.candidateId?.fullName,
         avatar: app.candidateId?.avatar,
       },
@@ -215,4 +227,60 @@ export const getApplicationsByEmployer = async (employerId) => {
   });
 
   return result;
+};
+
+export const getConversationById = async (conversationId, role) => {
+  const c = await Conversation.findById(conversationId)
+    .populate('candidateId', 'fullName avatar userId')
+    .populate({
+      path: 'employerId',
+      select: 'avatar companyId userId',
+      populate: {
+        path: 'companyId',
+        select: 'name logo',
+      },
+    })
+    .populate({
+      path: 'jobId',
+      select: 'title',
+    });
+
+  if (!c) return null;
+
+  const lastMsg = await Message.find({ conversationId: c._id })
+    .sort({ createdAt: -1 })
+    .limit(1);
+  const last = lastMsg[0];
+
+  if (role === 'employer') {
+    return {
+      id: c.candidateId?._id,
+      userId: c.candidateId?.userId,
+      name: c.candidateId?.fullName,
+      avatar: c.candidateId?.avatar,
+      position: c.jobId?.title,
+      lastMessage: last ? formatLastMessage(last) : c.lastMessage || '',
+      lastMessageTime: last?.createdAt || c.updatedAt,
+      unreadCount: c.unreadCount || {
+        employer: 0,
+        candidate: 0,
+      },
+      conversationId: c._id,
+    };
+  } else {
+    return {
+      position: c.jobId?.title,
+      id: c.employerId?._id,
+      userId: c.employerId?.userId,
+      name: c.employerId?.companyId?.name || 'Unknown Company',
+      avatar: c.employerId?.companyId?.logo || c.employerId?.avatar,
+      lastMessage: last ? formatLastMessage(last) : c.lastMessage || '',
+      lastMessageTime: last?.createdAt || c.updatedAt,
+      unreadCount: c.unreadCount || {
+        employer: 0,
+        candidate: 0,
+      },
+      conversationId: c._id,
+    };
+  }
 };

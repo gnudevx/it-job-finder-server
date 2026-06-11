@@ -2,8 +2,10 @@ import {
   getOrCreateConversation,
   getConversationsByCandidate,
   getApplicationsByCandidate,
+  getConversationById,
 } from '../services/conversation.service.js';
 import Candidate from '../models/candidate.model.js';
+import Conversation from '../models/conversation.model.js';
 export const getCandidateConversations = async (req, res) => {
   try {
     const candidate = await Candidate.findOne({ userId: req.user.userId });
@@ -63,5 +65,41 @@ export const getCandidateApplications = async (req, res) => {
       success: false,
       message: 'Server error',
     });
+  }
+};
+
+export const getConversationDetails = async (req, res) => {
+  try {
+    const convoId = req.params.id;
+    const convo = await getConversationById(convoId, 'candidate');
+    if (!convo) {
+      return res.status(404).json({ message: 'Conversation not found' });
+    }
+    res.json(convo);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getCandidateUnreadCount = async (req, res) => {
+  try {
+    const candidate = await Candidate.findOne({
+      userId: req.user.userId || req.user.id,
+    });
+    if (!candidate) {
+      return res
+        .status(404)
+        .json({ success: false, message: 'Candidate not found' });
+    }
+    const conversations = await Conversation.find({
+      candidateId: candidate._id,
+    });
+    const totalUnread = conversations.reduce(
+      (sum, c) => sum + (c.unreadCount?.candidate || 0),
+      0,
+    );
+    res.json({ unreadCount: totalUnread });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
