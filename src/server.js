@@ -12,6 +12,12 @@ const callSessions = new Map();
 // Map lưu timeout cho missed call (30s không nghe = missed)
 const callTimeouts = new Map();
 
+// Trạng thái hoạt động online/offline
+const onlineUsers = new Map();
+const lastActiveMap = new Map();
+app.set('onlineUsers', onlineUsers);
+app.set('lastActiveMap', lastActiveMap);
+
 // Tạo HTTP server
 const server = http.createServer(app);
 
@@ -49,10 +55,21 @@ io.on('connection', (socket) => {
       return;
     }
     // update DB
+    let lastMessageText = message.text || '';
+    if (message.type === 'file') {
+      lastMessageText = '📎 File';
+    } else if (message.type === 'interview') {
+      lastMessageText = '📅 Lịch phỏng vấn';
+    } else if (message.type === 'assignment') {
+      lastMessageText = '📝 Test Assignment';
+    } else if (message.type === 'assignment_submit') {
+      lastMessageText = '✅ Nộp bài Assignment';
+    }
+
     const updated = await Conversation.findByIdAndUpdate(
       conversationId,
       {
-        lastMessage: message.type === 'file' ? '📎 File' : message.text || '',
+        lastMessage: lastMessageText,
         lastMessageTime: message.createdAt,
         $inc: {
           'unreadCount.employer': isEmployerSender ? 0 : 1,
@@ -67,13 +84,49 @@ io.on('connection', (socket) => {
       ...message,
       unreadCount: updated.unreadCount,
     });
+
+    // Gửi đến room cá nhân của người nhận để cập nhật unread badge ngoài khung chat
+    const receiverUserId = isEmployerSender
+      ? String(candidate.userId)
+      : String(employer.userId);
+    if (receiverUserId) {
+      io.to(`user:${receiverUserId}`).emit('receive-message', {
+        ...message,
+        unreadCount: updated.unreadCount,
+      });
+    }
   });
   socket.on('disconnect', () => {
     console.log('Socket disconnected:', socket.id);
+    let disconnectedUserId = null;
+    for (const [uid, sid] of onlineUsers.entries()) {
+      if (sid === socket.id) {
+        disconnectedUserId = uid;
+        break;
+      }
+    }
+    if (disconnectedUserId) {
+      onlineUsers.delete(disconnectedUserId);
+      const now = new Date();
+      lastActiveMap.set(disconnectedUserId, now);
+      io.emit('user:status', {
+        userId: disconnectedUserId,
+        status: 'offline',
+        lastActive: now,
+      });
+    }
   });
   socket.on('user:join', (userId) => {
     socket.join(`user:${userId}`);
+    onlineUsers.set(String(userId), socket.id);
+    lastActiveMap.set(String(userId), new Date());
     console.log(`User ${userId} joined personal room`);
+
+    // Phát trạng thái online
+    io.emit('user:status', {
+      userId,
+      status: 'online',
+    });
   });
   socket.on('call:ring', async ({ conversationId, callerId }) => {
     const conversation = await Conversation.findById(conversationId);
