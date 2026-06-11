@@ -3,6 +3,8 @@ import {
   getEmployerConversations,
   createConversation,
   getCandidate,
+  getConversationDetails,
+  getEmployerUnreadCount,
 } from '../../controllers/conversation.controller.js';
 
 import {
@@ -13,7 +15,9 @@ import {
 const router = express.Router();
 
 // conversation
+router.get('/conversations/unread-count', getEmployerUnreadCount);
 router.get('/conversations/employer', getEmployerConversations);
+router.get('/conversations/:id', getConversationDetails);
 router.post('/conversations', createConversation);
 
 // message

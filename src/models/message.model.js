@@ -19,8 +19,43 @@ const MessageSchema = new mongoose.Schema(
     // ── Call message ──────────────────────────
     type: {
       type: String,
-      enum: ['text', 'call', 'file'],
+      enum: [
+        'text',
+        'call',
+        'file',
+        'interview',
+        'assignment',
+        'assignment_submit',
+      ],
       default: 'text',
+    },
+    interviewDate: {
+      type: Date,
+    },
+    interviewTime: {
+      type: String,
+    },
+    interviewLink: {
+      type: String,
+    },
+    assignmentTitle: {
+      type: String,
+    },
+    assignmentDescription: {
+      type: String,
+    },
+    assignmentDeadline: {
+      type: Date,
+    },
+    submissionLink: {
+      type: String,
+    },
+    submissionNote: {
+      type: String,
+    },
+    assignmentRefId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Message',
     },
     file: {
       url: String,

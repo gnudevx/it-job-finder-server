@@ -19,12 +19,32 @@ export const sendMessage = async ({
   senderId,
   senderRole,
   text,
+  type,
+  interviewDate,
+  interviewTime,
+  interviewLink,
+  assignmentTitle,
+  assignmentDescription,
+  assignmentDeadline,
+  submissionLink,
+  submissionNote,
+  assignmentRefId,
 }) => {
   const msg = await Message.create({
     conversationId,
     senderId,
     senderRole,
     text,
+    type,
+    interviewDate,
+    interviewTime,
+    interviewLink,
+    assignmentTitle,
+    assignmentDescription,
+    assignmentDeadline,
+    submissionLink,
+    submissionNote,
+    assignmentRefId,
   });
 
   // LẤY conversation ra
@@ -33,7 +53,18 @@ export const sendMessage = async ({
   if (!conversation) throw new Error('Conversation not found');
 
   // update dữ liệu
-  conversation.lastMessage = text;
+  let lastMsgText = text;
+  if (type === 'file') {
+    lastMsgText = '📎 File';
+  } else if (type === 'interview') {
+    lastMsgText = '📅 Lịch phỏng vấn';
+  } else if (type === 'assignment') {
+    lastMsgText = '📝 Test Assignment';
+  } else if (type === 'assignment_submit') {
+    lastMsgText = '✅ Nộp bài Assignment';
+  }
+
+  conversation.lastMessage = lastMsgText || '';
   conversation.lastMessageTime = new Date();
 
   await conversation.save();

@@ -7,6 +7,22 @@ const router = express.Router();
 // đánh dấu đã đọc
 router.post('/mark-as-read', markAsRead);
 
+// lấy trạng thái online/hoạt động cuối cùng
+router.get('/user-status/:userId', (req, res) => {
+  const { userId } = req.params;
+  const onlineUsers = req.app.get('onlineUsers');
+  const lastActiveMap = req.app.get('lastActiveMap');
+
+  const isOnline = onlineUsers ? onlineUsers.has(String(userId)) : false;
+  const lastActive = lastActiveMap ? lastActiveMap.get(String(userId)) : null;
+
+  res.json({
+    userId,
+    isOnline,
+    lastActive,
+  });
+});
+
 router.post('/send-file', uploadChatFile.single('file'), async (req, res) => {
   try {
     const { conversationId, senderId } = req.body;
