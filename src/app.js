@@ -92,6 +92,8 @@ app.use('/api/auth', authRoutes);
 
 // Mount public jobs route before the global '/api' protected middleware
 app.use('/api/jobs', jobsRouter);
+// Mount public recommend route before the global '/api' protected middleware
+app.use('/api/recommend', recommendRoutes);
 
 app.use('/api', verifyAccessToken, httpLogger, aiRouter);
 app.use('/api/ai', httpLogger, aiRecommendRoutes);
@@ -216,9 +218,11 @@ app.use(
   AdminNotification,
 );
 app.use('/admin/dashboard', dashboardRoutes);
-app.use('/api/recommend', recommendRoutes);
+// recommendRoutes mounted earlier for public access
 
-app.use('/uploads', verifyAccessToken, httpLogger, express.static('uploads'));
+// Serve uploaded files publicly so images (logos, resumes previews) are accessible
+// without requiring an Authorization header. Logging kept.
+app.use('/uploads', httpLogger, express.static('uploads'));
 app.use(errorLogger);
 // ERROR HANDLER
 // eslint-disable-next-line no-unused-vars

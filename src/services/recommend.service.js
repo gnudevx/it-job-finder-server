@@ -22,6 +22,14 @@ export const recommendJobsService = async (jobId) => {
   })
     .select('title salary_raw location embedding')
     .populate('location', 'name')
+    .populate({
+      path: 'employer_id',
+      select: 'companyId',
+      populate: {
+        path: 'companyId',
+        select: 'name logo',
+      },
+    })
     .sort({ createdAt: -1 })
     .lean();
 
@@ -49,6 +57,8 @@ export const recommendJobsService = async (jobId) => {
         title: job.title,
         salary_raw: job.salary_raw,
         location: job.location?.name,
+        companyName: job.employer_id?.companyId?.name || '',
+        logo: job.employer_id?.companyId?.logo || '',
         similarity: sim,
       });
     }
