@@ -341,7 +341,6 @@ export const createVNPayPayment = async (req, res) => {
       // vnp_IpnUrl: process.env.VNP_IPN_URL,
       vnp_IpAddr: ipAddr,
       vnp_CreateDate: dateFormat,
-      vnp_BankCode: 'NCB',
     };
 
     vnp_Params = sortObject(vnp_Params);
