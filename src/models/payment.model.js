@@ -25,7 +25,7 @@ const paymentSchema = new mongoose.Schema({
 
   provider: {
     type: String,
-    enum: ['MOMO', 'STRIPE', 'VNPAY', 'COD'],
+    enum: ['MOMO', 'STRIPE', 'VNPAY', 'QR'],
     default: 'MOMO',
   },
 

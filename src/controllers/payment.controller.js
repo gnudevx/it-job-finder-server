@@ -491,6 +491,74 @@ export const verifyVNPayReturn = async (req, res) => {
   });
 };
 
+export const createQRDemoPayment = async (req, res) => {
+  try {
+    const { packageId } = req.body;
+    const userId = req.user.userId;
+
+    const pkg = PACKAGE_MAP[packageId];
+
+    if (!pkg) {
+      return res.status(400).json({
+        message: 'Gói không hợp lệ',
+      });
+    }
+
+    const orderId = `QR_${Date.now()}`;
+
+    const payment = await Payment.create({
+      userId,
+      orderId,
+      tier: pkg.tier,
+      amount: pkg.amount,
+      provider: 'QR',
+      status: 'pending',
+    });
+
+    res.json({
+      payment,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: 'Lỗi tạo QR',
+    });
+  }
+};
+
+export const confirmQRDemoPayment = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const payment = await Payment.findOne({
+      orderId,
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        message: 'Không tìm thấy đơn hàng',
+      });
+    }
+
+    if (payment.status === 'approved') {
+      return res.json({
+        success: true,
+      });
+    }
+
+    await upgradeEmployer(payment);
+
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: 'Lỗi xác nhận',
+    });
+  }
+};
+
 export const getPaymentStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
