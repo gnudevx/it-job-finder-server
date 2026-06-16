@@ -1,3 +1,4 @@
+import axios from 'axios';
 import Job from '../models/jobs.model.js';
 import * as jobService from '../services/jobs.service.js';
 import Employer from '../models/employer.model.js';
@@ -237,10 +238,43 @@ export const createJob = async (req, res, next) => {
 
 export const updateJob = async (req, res) => {
   try {
-    const updatedJob = await Job.findByIdAndUpdate(req.params.id, req.body, {
+    const updateData = { ...req.body };
+
+    const text = [
+      updateData.title,
+      updateData.jobDescription,
+      ...(updateData.requirements || []),
+      ...(updateData.mustHaveSkills || []),
+      ...(updateData.optionalSkills || []),
+      ...(updateData.domainKnowledge || []),
+      ...(updateData.languages || []),
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    if (text.trim()) {
+      try {
+        const embeddingResponse = await axios.post(
+          `${process.env.CV_RECOMMEND_URL}/job-embedding`,
+          { text },
+        );
+
+        updateData.embedding = embeddingResponse.data.embedding || [];
+      } catch (e) {
+        console.error('Update embedding error:', e.message);
+      }
+    }
+
+    const updatedJob = await Job.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
     });
-    if (!updatedJob) return res.status(404).json({ message: 'Job not found' });
+
+    if (!updatedJob) {
+      return res.status(404).json({
+        message: 'Job not found',
+      });
+    }
+
     res.json({
       success: true,
       job: updatedJob,
@@ -248,9 +282,14 @@ export const updateJob = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ success: false, message: 'Có lỗi xảy ra' });
+
+    res.status(500).json({
+      success: false,
+      message: 'Có lỗi xảy ra',
+    });
   }
 };
+
 export const getAllJobsHistory = async (req, res) => {
   try {
     const employerUserId = req.user.userId;
