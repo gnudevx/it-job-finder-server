@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import jobsRouter from './routes/jobs.routes.js';
+import skillRouter from './routes/skill.routes.js';
 import locationRouter from './routes/employer/location.router.js';
 import SpecializationRouter from './routes/employer/specialization.router.js';
 import authRoutes from './routes/auth.routes.js';
@@ -98,6 +99,7 @@ app.use('/api/recommend', recommendRoutes);
 app.use('/api', verifyAccessToken, httpLogger, aiRouter);
 app.use('/api/ai', httpLogger, aiRecommendRoutes);
 app.use('/api/jobs', jobsRouter);
+app.use('/api/skills', skillRouter);
 app.use('/api/payments', payment);
 
 app.use(
