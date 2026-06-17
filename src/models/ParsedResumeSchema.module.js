@@ -44,6 +44,10 @@ const ParsedResumeSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    embedding: {
+      type: [Number],
+      default: [],
+    },
   },
   { timestamps: true },
 );
