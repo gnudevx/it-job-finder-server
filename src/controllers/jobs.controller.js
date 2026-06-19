@@ -23,7 +23,7 @@ export const getJobs = async (req, res) => {
       limit = 20,
     } = req.query;
 
-    const filter = { visibility: 'visible' };
+    const filter = { visibility: 'visible', publishStatus: 'approved' };
     const andConditions = []; // For combining multiple $or clauses
 
     if (location) {
@@ -108,62 +108,67 @@ export const getJobs = async (req, res) => {
       filter.$and = andConditions;
     }
 
-    const skip = (page - 1) * limit;
+    // Helper function to extract salary from job
+    const extractJobSalary = (job) => {
+      let jobSalary = 0;
 
-    let [jobs, total] = await Promise.all([
-      Job.find(filter)
-        .select(
-          'title salary_raw salary_normalized salaryFrom salaryTo location skills group_id employer_id createdAt',
-        )
-        .populate('location')
-        .populate('group_id')
-        .populate({
-          path: 'employer_id',
-          select: 'avatar companyId',
-          populate: {
-            path: 'companyId',
-            select: 'name logo',
-          },
-        })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(Number(limit))
-        .lean(),
+      // Priority 1: Use salary_normalized if available
+      if (job.salary_normalized && job.salary_normalized > 0) {
+        jobSalary = Number(job.salary_normalized);
+      }
+      // Priority 2: Extract from salaryFrom (for documents with range)
+      else if (job.salaryFrom && Number(job.salaryFrom) > 0) {
+        jobSalary = Number(job.salaryFrom);
+      }
+      // Priority 3: Parse salary_raw string
+      else if (job.salary_raw) {
+        // Extract all numbers from salary_raw and take the maximum
+        const numbers = (job.salary_raw || '')
+          .split(/[-–—,/]/) // Split by common separators
+          .map((n) => parseInt(n.replace(/\D/g, ''), 10))
+          .filter((n) => !Number.isNaN(n) && n > 0);
 
-      Job.countDocuments(filter),
-    ]);
+        if (numbers.length > 0) {
+          jobSalary = Math.max(...numbers);
+        }
+      }
 
+      return jobSalary;
+    };
+
+    // Fetch ALL matching jobs first (needed for accurate salary filtering)
+    let allJobs = await Job.find(filter)
+      .select(
+        'title salary_raw salary_normalized salaryFrom salaryTo location skills group_id employer_id createdAt',
+      )
+      .populate('location')
+      .populate('group_id')
+      .populate({
+        path: 'employer_id',
+        select: 'avatar companyId',
+        populate: {
+          path: 'companyId',
+          select: 'name logo',
+        },
+      })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Apply salary filter BEFORE pagination if provided
     if (salaryLevel) {
       const threshold = Number(salaryLevel);
       if (!Number.isNaN(threshold)) {
-        jobs = jobs.filter((job) => {
-          let jobSalary = 0;
-
-          // Priority 1: Use salary_normalized if available
-          if (job.salary_normalized && job.salary_normalized > 0) {
-            jobSalary = Number(job.salary_normalized);
-          }
-          // Priority 2: Extract from salaryFrom (for documents with range)
-          else if (job.salaryFrom && Number(job.salaryFrom) > 0) {
-            jobSalary = Number(job.salaryFrom);
-          }
-          // Priority 3: Parse salary_raw string
-          else if (job.salary_raw) {
-            // Extract all numbers from salary_raw and take the maximum
-            const numbers = (job.salary_raw || '')
-              .split(/[-–—,/]/) // Split by common separators
-              .map((n) => parseInt(n.replace(/\D/g, ''), 10))
-              .filter((n) => !Number.isNaN(n) && n > 0);
-
-            if (numbers.length > 0) {
-              jobSalary = Math.max(...numbers);
-            }
-          }
-
+        allJobs = allJobs.filter((job) => {
+          const jobSalary = extractJobSalary(job);
           return jobSalary > 0 && jobSalary >= threshold;
         });
       }
     }
+
+    // NOW calculate pagination based on FILTERED results
+    const total = allJobs.length;
+    const skip = (page - 1) * limit;
+    const jobs = allJobs.slice(skip, skip + Number(limit));
 
     return res.status(200).json({
       success: true,
@@ -184,7 +189,10 @@ export const getJobsGroup = async (req, res) => {
   try {
     const groupName = req.params.group;
 
-    const jobs = await Job.find()
+    const jobs = await Job.find({
+      visibility: 'visible',
+      publishStatus: 'approved',
+    })
       .populate('group_id')
       .populate('location')
       .populate('skills')
