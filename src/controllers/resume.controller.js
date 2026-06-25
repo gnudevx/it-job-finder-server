@@ -74,21 +74,9 @@ export const setDefaultResume = async (req, res) => {
 export const viewResume = async (req, res) => {
   try {
     const { resume } = await getResumeFileService(req.params.id);
-    const ext = resume.fileName.split('.').pop().toLowerCase();
 
     if (!resume.fileUrl) {
       throw new Error('Không tìm thấy URL file CV');
-    }
-
-    if (ext === 'pdf') {
-      const remoteFile = await fetch(resume.fileUrl);
-      if (!remoteFile.ok) {
-        throw new Error('Không tải được file CV từ Cloudinary');
-      }
-
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'inline');
-      return Readable.from(remoteFile.body).pipe(res);
     }
 
     return res.redirect(resume.fileUrl);
