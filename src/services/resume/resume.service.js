@@ -3,7 +3,6 @@ import candidateService from '../candidate.service.js';
 import cloudinary from '../../config/cloudinary.js';
 import { parseAndSaveResume } from '../parseResume.service.js';
 import { recommendJobsForResume } from './recommendResume.service.js';
-import cloudinary from '../../config/cloudinary.js';
 export const uploadResumeService = async (userId, file) => {
   const candidate = await candidateService.getMyInfo(userId);
 
