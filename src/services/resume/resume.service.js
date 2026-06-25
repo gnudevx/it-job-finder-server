@@ -14,6 +14,11 @@ export const uploadResumeService = async (userId, file) => {
     throw new Error('File is required');
   }
 
+  const fileUrl = file.path || file.secure_url || file.url;
+  if (!fileUrl) {
+    throw new Error('Upload failed, không lấy được URL file.');
+  }
+
   let fileType = 'pdf';
 
   if (
@@ -27,7 +32,7 @@ export const uploadResumeService = async (userId, file) => {
 
   const newResume = await Resume.create({
     candidateId: candidate._id,
-    fileUrl: file.path,
+    fileUrl,
     fileName: file.originalname,
     fileType,
     size: file.size,
