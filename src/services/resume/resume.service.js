@@ -83,7 +83,8 @@ export const getResumeFileService = async (id) => {
 };
 
 export const recommendResumeService = async (resumeId) => {
-  if (process.env.CV_RECOMMEND_URL) {
+  const recommend_url = process.env.CV_RECOMMEND_URL + '/recommend';
+  if (recommend_url) {
     const resume = await Resume.findById(resumeId);
     if (!resume) throw new Error('CV không tồn tại');
 
@@ -97,7 +98,7 @@ export const recommendResumeService = async (resumeId) => {
     const formData = new FormData();
     formData.append('file', blob, resume.fileName);
 
-    const response = await fetch(process.env.CV_RECOMMEND_URL, {
+    const response = await fetch(recommend_url, {
       method: 'POST',
       body: formData,
     });

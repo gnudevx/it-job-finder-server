@@ -1,5 +1,6 @@
 import Resume from '../models/resumes.model.js';
 import ParsedResume from '../models/ParsedResumeSchema.module.js';
+import { generateResumeEmbedding } from './resume/resumeEmbedding.js';
 
 import { parsePdf } from './resume/pdfParser.js';
 import { parseDocx } from './resume/docxParser.js';
@@ -12,7 +13,7 @@ import { normalizeText } from './resume/normalizeText.js';
 import { extractFacts } from './resume/extractFacts.js';
 import { composeSummary } from './resume/summaryComposer.js';
 import { makeShortSummary } from './resume/shortSummaryExtractor.js';
-import { triggerEmbedCV } from './ai/embedTrigger.js';
+// import { triggerEmbedCV } from './ai/embedTrigger.js';
 /**
  * Parse resume based on file type
  */
@@ -75,9 +76,9 @@ export async function parseAndSaveResume(resumeId) {
   });
   // 6. Trigger Python embed — fire & forget, không await
   // Không block response về cho user, Python tự xử lý nền
-  triggerEmbedCV(resumeId.toString()).catch((err) =>
+  generateResumeEmbedding(resumeId).catch((err) =>
     console.error(
-      `[EmbedTrigger] Failed for resumeId ${resumeId}:`,
+      `[ResumeEmbedding] Failed for resumeId ${resumeId}:`,
       err.message,
     ),
   );

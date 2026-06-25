@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import jobsRouter from './routes/jobs.routes.js';
+import skillRouter from './routes/skill.routes.js';
 import locationRouter from './routes/employer/location.router.js';
 import SpecializationRouter from './routes/employer/specialization.router.js';
 import authRoutes from './routes/auth.routes.js';
@@ -92,10 +93,13 @@ app.use('/api/auth', authRoutes);
 
 // Mount public jobs route before the global '/api' protected middleware
 app.use('/api/jobs', jobsRouter);
+// Mount public recommend route before the global '/api' protected middleware
+app.use('/api/recommend', recommendRoutes);
 
 app.use('/api', verifyAccessToken, httpLogger, aiRouter);
 app.use('/api/ai', httpLogger, aiRecommendRoutes);
 app.use('/api/jobs', jobsRouter);
+app.use('/api/skills', skillRouter);
 app.use('/api/payments', payment);
 
 app.use(
@@ -216,8 +220,14 @@ app.use(
   AdminNotification,
 );
 app.use('/admin/dashboard', dashboardRoutes);
-app.use('/api/recommend', recommendRoutes);
+// recommendRoutes mounted earlier for public access
 
+<<<<<<< HEAD
+=======
+// Serve uploaded files publicly so images (logos, resumes previews) are accessible
+// without requiring an Authorization header. Logging kept.
+app.use('/uploads', httpLogger, express.static('uploads'));
+>>>>>>> dcbd51e93552c210ffaf980439ff96060492508b
 app.use(errorLogger);
 // ERROR HANDLER
 // eslint-disable-next-line no-unused-vars

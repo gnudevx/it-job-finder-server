@@ -4,6 +4,7 @@ import Skill from '../models/skill.model.js';
 import Jobs from '../models/jobs.model.js';
 import Employer from '../models/employer.model.js';
 import * as JobRepository from '../repositories/jobs.repository.js';
+import { generateJobEmbedding } from './embedding.service.js';
 
 export const getAllJobGroups = async () => {
   return await JobsGroup.find({});
@@ -98,6 +99,9 @@ export const createJobService = async (form, employerId) => {
     // 4️⃣ Update employer monthlyPosts & lastPostAt
     employer.lastPostAt = now;
     await employer.save();
+    const embedding = await generateJobEmbedding(jobData);
+
+    jobData.embedding = embedding;
 
     return JobRepository.createJob(jobData);
   } catch (error) {

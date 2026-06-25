@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import axios from 'axios';
 import Stripe from 'stripe';
+import qs from 'qs';
 import Payment from '../models/payment.model.js';
 import Employer from '../models/employer.model.js';
 import AccountActivity from '../models/accountActivity.model.js';
@@ -50,9 +51,17 @@ const upgradeEmployer = async (payment) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════
-// ░░░ MOMO ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-// ═══════════════════════════════════════════════════════════
+const sortObject = (obj) => {
+  const sorted = {};
+  const keys = Object.keys(obj).sort();
+
+  keys.forEach((key) => {
+    sorted[key] = encodeURIComponent(obj[key]).replace(/%20/g, '+');
+  });
+
+  return sorted;
+};
+// MOMO
 
 export const createMoMoPayment = async (req, res) => {
   try {
@@ -93,7 +102,7 @@ export const createMoMoPayment = async (req, res) => {
 
     const rawSignature =
       `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${ipnUrl}` +
-      `&orderId=${orderId}&orderInfo=Upgrade ${tier}` +
+      `&orderId=${orderId}&orderInfo=Upgrade_${tier}` +
       `&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}` +
       `&requestId=${requestId}&requestType=captureWallet`;
 
@@ -156,9 +165,7 @@ export const momoIPN = async (req, res) => {
   }
 };
 
-// ═══════════════════════════════════════════════════════════
-// ░░░ STRIPE ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-// ═══════════════════════════════════════════════════════════
+// STRIPE
 
 export const createStripePayment = async (req, res) => {
   try {
@@ -278,6 +285,278 @@ export const stripeWebhook = async (req, res) => {
   }
 
   res.status(200).json({ received: true });
+};
+
+// VNPAY
+export const createVNPayPayment = async (req, res) => {
+  try {
+    const { packageId } = req.body;
+    const userId = req.user.userId;
+
+    const pkg = PACKAGE_MAP[packageId];
+
+    if (!pkg) {
+      return res.status(400).json({
+        message: 'Gói không hợp lệ',
+      });
+    }
+
+    const { tier, amount } = pkg;
+
+    const orderId = `VNPAY_${Date.now()}`;
+
+    await Payment.create({
+      userId,
+      orderId,
+      tier,
+      amount,
+      provider: 'VNPAY',
+      status: 'pending',
+    });
+
+    const ipAddr =
+      req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+
+    const createDate = new Date();
+
+    const dateFormat =
+      createDate.getFullYear().toString() +
+      ('0' + (createDate.getMonth() + 1)).slice(-2) +
+      ('0' + createDate.getDate()).slice(-2) +
+      ('0' + createDate.getHours()).slice(-2) +
+      ('0' + createDate.getMinutes()).slice(-2) +
+      ('0' + createDate.getSeconds()).slice(-2);
+
+    let vnp_Params = {
+      vnp_Version: '2.1.0',
+      vnp_Command: 'pay',
+      vnp_TmnCode: process.env.VNP_TMN_CODE,
+      vnp_Locale: 'vn',
+      vnp_CurrCode: 'VND',
+      vnp_TxnRef: orderId,
+      vnp_OrderInfo: `Upgrade ${tier}`,
+      vnp_OrderType: 'other',
+      vnp_Amount: amount * 100,
+      vnp_ReturnUrl: process.env.VNP_RETURN_URL,
+      // vnp_IpnUrl: process.env.VNP_IPN_URL,
+      vnp_IpAddr: ipAddr,
+      vnp_CreateDate: dateFormat,
+    };
+
+    vnp_Params = sortObject(vnp_Params);
+
+    const signData = qs.stringify(vnp_Params, {
+      encode: false,
+    });
+
+    const secureHash = crypto
+      .createHmac('sha512', process.env.VNP_HASH_SECRET)
+      .update(signData, 'utf8')
+      .digest('hex');
+
+    vnp_Params.vnp_SecureHash = secureHash;
+
+    const paymentUrl =
+      process.env.VNP_URL +
+      '?' +
+      qs.stringify(vnp_Params, {
+        encode: false,
+      });
+
+    console.log('SIGN DATA:', signData);
+    console.log('SECURE HASH:', secureHash);
+    console.log('PAY URL:', paymentUrl);
+
+    return res.json({
+      payUrl: paymentUrl,
+    });
+  } catch (err) {
+    console.error(err);
+
+    res.status(500).json({
+      message: 'Lỗi tạo thanh toán VNPAY',
+    });
+  }
+};
+
+export const vnpayIPN = async (req, res) => {
+  try {
+    const vnp_Params = { ...req.query };
+
+    const secureHash = vnp_Params.vnp_SecureHash;
+
+    delete vnp_Params.vnp_SecureHash;
+    delete vnp_Params.vnp_SecureHashType;
+
+    const signData = qs.stringify(sortObject(vnp_Params), {
+      encode: false,
+    });
+
+    const signed = crypto
+      .createHmac('sha512', process.env.VNP_HASH_SECRET)
+      .update(Buffer.from(signData, 'utf-8'))
+      .digest('hex');
+
+    if (secureHash !== signed) {
+      return res.status(400).json({
+        RspCode: '97',
+        Message: 'Invalid checksum',
+      });
+    }
+
+    const { vnp_TxnRef, vnp_ResponseCode } = req.query;
+
+    const payment = await Payment.findOne({
+      orderId: vnp_TxnRef,
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        RspCode: '01',
+        Message: 'Order not found',
+      });
+    }
+
+    if (payment.status === 'approved') {
+      return res.json({
+        RspCode: '00',
+        Message: 'Already confirmed',
+      });
+    }
+
+    if (vnp_ResponseCode !== '00') {
+      payment.status = 'rejected';
+      await payment.save();
+
+      return res.json({
+        RspCode: '00',
+        Message: 'Confirm Success',
+      });
+    }
+
+    await upgradeEmployer(payment);
+
+    return res.json({
+      RspCode: '00',
+      Message: 'Confirm Success',
+    });
+  } catch (err) {
+    console.error(err);
+
+    return res.status(500).json({
+      RspCode: '99',
+      Message: 'Unknown error',
+    });
+  }
+};
+
+export const verifyVNPayReturn = async (req, res) => {
+  const vnp_Params = { ...req.query };
+
+  const secureHash = vnp_Params.vnp_SecureHash;
+
+  delete vnp_Params.vnp_SecureHash;
+  delete vnp_Params.vnp_SecureHashType;
+
+  const signData = qs.stringify(sortObject(vnp_Params), { encode: false });
+
+  const signed = crypto
+    .createHmac('sha512', process.env.VNP_HASH_SECRET)
+    .update(Buffer.from(signData, 'utf-8'))
+    .digest('hex');
+
+  if (secureHash !== signed) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid checksum',
+    });
+  }
+
+  const payment = await Payment.findOne({
+    orderId: req.query.vnp_TxnRef,
+  });
+
+  if (!payment) {
+    return res.status(404).json({
+      success: false,
+    });
+  }
+
+  if (req.query.vnp_ResponseCode === '00' && payment.status !== 'approved') {
+    await upgradeEmployer(payment);
+  }
+
+  return res.json({
+    success: true,
+  });
+};
+
+export const createQRDemoPayment = async (req, res) => {
+  try {
+    const { packageId } = req.body;
+    const userId = req.user.userId;
+
+    const pkg = PACKAGE_MAP[packageId];
+
+    if (!pkg) {
+      return res.status(400).json({
+        message: 'Gói không hợp lệ',
+      });
+    }
+
+    const orderId = `QR_${Date.now()}`;
+
+    const payment = await Payment.create({
+      userId,
+      orderId,
+      tier: pkg.tier,
+      amount: pkg.amount,
+      provider: 'QR',
+      status: 'pending',
+    });
+
+    res.json({
+      payment,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: 'Lỗi tạo QR',
+    });
+  }
+};
+
+export const confirmQRDemoPayment = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    const payment = await Payment.findOne({
+      orderId,
+    });
+
+    if (!payment) {
+      return res.status(404).json({
+        message: 'Không tìm thấy đơn hàng',
+      });
+    }
+
+    if (payment.status === 'approved') {
+      return res.json({
+        success: true,
+      });
+    }
+
+    await upgradeEmployer(payment);
+
+    res.json({
+      success: true,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: 'Lỗi xác nhận',
+    });
+  }
 };
 
 export const getPaymentStatus = async (req, res) => {

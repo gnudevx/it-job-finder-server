@@ -17,14 +17,34 @@ const forwardToFastAPI = async (path, method, body, userId) => {
     method,
     headers: {
       'Content-Type': 'application/json',
-      'X-User-Id': userId, // FastAPI đọc header này thay vì verify JWT lại
+      'X-User-Id': userId,
       'X-User-Role': 'user',
     },
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  const data = await response.json();
-  return { status: response.status, data };
+  const rawText = await response.text();
+
+  let data;
+
+  try {
+    data = rawText ? JSON.parse(rawText) : {};
+  } catch (err) {
+    console.error('Error parsing JSON from FastAPI response:', err);
+
+    return {
+      status: response.status || 500,
+      data: {
+        message: 'AI service trả dữ liệu không hợp lệ',
+        raw: rawText,
+      },
+    };
+  }
+
+  return {
+    status: response.status,
+    data,
+  };
 };
 
 // ── POST /api/ai/chat ─────────────────────────────────────────────────────────
