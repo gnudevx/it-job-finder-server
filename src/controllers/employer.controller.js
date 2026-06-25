@@ -113,7 +113,7 @@ export const uploadLicenseController = async (req, res) => {
 
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
-    const fileUrl = `/uploads/licenses/${req.file.filename}`;
+    const fileUrl = req.file.path;
 
     const updatedEmployer = await updateLicenseService(userId, fileUrl);
     if (updatedEmployer) {

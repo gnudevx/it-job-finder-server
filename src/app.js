@@ -63,7 +63,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true,
   }),
 );
@@ -218,7 +218,6 @@ app.use(
 app.use('/admin/dashboard', dashboardRoutes);
 app.use('/api/recommend', recommendRoutes);
 
-app.use('/uploads', verifyAccessToken, httpLogger, express.static('uploads'));
 app.use(errorLogger);
 // ERROR HANDLER
 // eslint-disable-next-line no-unused-vars

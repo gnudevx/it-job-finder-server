@@ -1,6 +1,6 @@
 import Employer from '../models/employer.model.js';
 import Jobs from '../models/jobs.model.js';
-import fs from 'fs';
+import cloudinary from '../config/cloudinary.js';
 import moment from 'moment';
 export const findEmployer = async (userId) => {
   const employer = await Employer.findOne({ userId });
@@ -11,17 +11,19 @@ export const updateLicenseService = async (userId, fileUrl) => {
   const employer = await Employer.findOne({ userId });
   if (!employer) return null;
 
-  // xóa file cũ nếu có
+  // Xóa file cũ trên Cloudinary nếu có
   if (employer.license?.fileUrl) {
-    const oldPath = `.${employer.license.fileUrl}`;
-    if (fs.existsSync(oldPath)) {
-      fs.unlinkSync(oldPath);
-    }
+    const publicId = employer.license.fileUrl
+      .split('/')
+      .slice(-2)
+      .join('/')
+      .replace(/\.[^/.]+$/, '');
+
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
   }
 
-  // cập nhật file mới + status = pending
   employer.license = {
-    fileUrl,
+    fileUrl, // fileUrl giờ là URL Cloudinary, truyền vào từ controller
     status: 'pending',
     uploadedAt: new Date(),
     reviewedAt: null,

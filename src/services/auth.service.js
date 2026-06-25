@@ -168,8 +168,8 @@ export const refreshTokenController = async (req, res, next) => {
       const accessToken = generateAccessToken(decoded);
       res.cookie('accessToken', accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'Lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 60 * 60 * 1000,
       });
 

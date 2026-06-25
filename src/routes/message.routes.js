@@ -33,7 +33,7 @@ router.post('/send-file', uploadChatFile.single('file'), async (req, res) => {
       senderId,
       type: 'file',
       file: {
-        url: `/uploads/chat/${file.filename}`,
+        url: file.path,
         name: file.originalname,
         size: file.size,
         mimeType: file.mimetype,

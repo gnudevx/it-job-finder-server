@@ -1,42 +1,20 @@
 // middlewares/uploadChatFile.js
-import multer from 'multer';
-import path from 'path';
+import { createUploader } from '../config/cloudinary.js';
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/chat/');
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const name = path.basename(file.originalname, ext);
-
-    cb(null, `${Date.now()}-${name}${ext}`);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
-  const allowedTypes = [
-    'application/pdf',
-    'image/png',
-    'image/jpeg',
-    'image/gif',
-    'image/webp',
-    'image/svg+xml',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  ];
-
-  if (!allowedTypes.includes(file.mimetype)) {
-    return cb(new Error('File type not supported'), false);
-  }
-
-  cb(null, true);
-};
-
-const uploadChatFile = multer({
-  storage,
-  fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+const uploadChatFile = createUploader({
+  folder: 'chat',
+  allowedFormats: [
+    'pdf',
+    'png',
+    'jpg',
+    'jpeg',
+    'gif',
+    'webp',
+    'svg',
+    'doc',
+    'docx',
+  ],
+  fileSizeMB: 10,
 });
 
 export default uploadChatFile;

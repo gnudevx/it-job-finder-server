@@ -7,6 +7,7 @@ import { changePasswordService } from '../services/user.service.js';
 import User from '../models/User.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 import AuthLog from '../models/authLog.model.js';
+import { cookieOptions } from '../utils/cookie.js';
 /* 1. LOGIN NORMAL */
 export const login = async (req, res, next) => {
   try {
@@ -28,21 +29,8 @@ export const login = async (req, res, next) => {
       action: 'LOGIN',
     });
     // SET COOKIE
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 1000,
-    });
+    res.cookie('refreshToken', refreshToken, cookieOptions(7 * 24 * 60 * 60));
+    res.cookie('accessToken', accessToken, cookieOptions(60 * 60));
 
     return res.json(result);
   } catch (error) {
@@ -68,22 +56,8 @@ export const googleLogin = async (req, res) => {
     });
 
     // SET COOKIE refreshToken
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    // SET COOKIE accessToken
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 1000,
-    });
+    res.cookie('refreshToken', refreshToken, cookieOptions(7 * 24 * 60 * 60));
+    res.cookie('accessToken', accessToken, cookieOptions(60 * 60));
 
     return res.json(result);
   } catch (error) {
@@ -139,21 +113,8 @@ export const register = async (req, res, next) => {
     const refreshToken = generateRefreshToken(user);
 
     // SET COOKIE
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 1000,
-    });
+    res.cookie('refreshToken', refreshToken, cookieOptions(7 * 24 * 60 * 60));
+    res.cookie('accessToken', accessToken, cookieOptions(60 * 60));
 
     return res.status(201).json({
       success: true,

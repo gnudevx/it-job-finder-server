@@ -1,10 +1,9 @@
 import Resume from '../../models/resumes.model.js';
 import candidateService from '../candidate.service.js';
-import fs from 'fs';
-import path from 'path';
+import cloudinary from '../../config/cloudinary.js';
 import { parseAndSaveResume } from '../parseResume.service.js';
 import { recommendJobsForResume } from './recommendResume.service.js';
-
+import cloudinary from '../../config/cloudinary.js';
 export const uploadResumeService = async (userId, file) => {
   const candidate = await candidateService.getMyInfo(userId);
 
@@ -29,7 +28,7 @@ export const uploadResumeService = async (userId, file) => {
 
   const newResume = await Resume.create({
     candidateId: candidate._id,
-    fileUrl: `/uploads/resumes/${file.filename}`,
+    fileUrl: file.path,
     fileName: file.originalname,
     fileType,
     size: file.size,
@@ -58,14 +57,13 @@ export const deleteResumeService = async (id) => {
     throw new Error('CV không tồn tại');
   }
 
-  const filePath = '.' + resume.fileUrl;
+  const publicId = resume.fileUrl
+    .split('/')
+    .slice(-2) // lấy folder/filename
+    .join('/')
+    .replace(/\.[^/.]+$/, ''); // bỏ extension
 
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
-  }
-
-  await resume.deleteOne();
-
+  await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
   return true;
 };
 
@@ -79,49 +77,24 @@ export const setDefaultResumeService = async (candidateId, id) => {
 
 export const getResumeFileService = async (id) => {
   const resume = await Resume.findById(id);
+  if (!resume) throw new Error('Resume not found');
 
-  if (!resume) {
-    throw new Error('Resume not found');
-  }
-
-  const filePath = path.join(process.cwd(), resume.fileUrl.replace(/^\//, ''));
-
-  if (!fs.existsSync(filePath)) {
-    throw new Error('File not found');
-  }
-
-  return {
-    resume,
-    filePath,
-  };
+  return { resume, fileUrl: resume.fileUrl };
 };
 
 export const recommendResumeService = async (resumeId) => {
   if (process.env.CV_RECOMMEND_URL) {
     const resume = await Resume.findById(resumeId);
+    if (!resume) throw new Error('CV không tồn tại');
 
-    if (!resume) {
-      throw new Error('CV không tồn tại');
-    }
+    // Fetch file từ Cloudinary URL thay vì đọc local
+    const fileResponse = await fetch(resume.fileUrl);
+    if (!fileResponse.ok) throw new Error('Không tải được file từ Cloudinary');
 
-    const relativePath = resume.fileUrl.startsWith('/')
-      ? resume.fileUrl.slice(1)
-      : resume.fileUrl;
-
-    const filePath = path.join(process.cwd(), relativePath);
-
-    if (!fs.existsSync(filePath)) {
-      throw new Error('File không tồn tại');
-    }
-
-    const fileBuffer = await fs.promises.readFile(filePath);
-
-    const blob = new Blob([fileBuffer], {
-      type: 'application/pdf',
-    });
+    const fileBuffer = await fileResponse.arrayBuffer();
+    const blob = new Blob([fileBuffer], { type: 'application/pdf' });
 
     const formData = new FormData();
-
     formData.append('file', blob, resume.fileName);
 
     const response = await fetch(process.env.CV_RECOMMEND_URL, {
@@ -131,9 +104,7 @@ export const recommendResumeService = async (resumeId) => {
 
     if (!response.ok) {
       const text = await response.text();
-
       console.error('Recommend service returned error:', response.status, text);
-
       throw new Error('Dịch vụ gợi ý CV lỗi');
     }
 
