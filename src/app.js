@@ -222,12 +222,6 @@ app.use(
 app.use('/admin/dashboard', dashboardRoutes);
 // recommendRoutes mounted earlier for public access
 
-<<<<<<< HEAD
-=======
-// Serve uploaded files publicly so images (logos, resumes previews) are accessible
-// without requiring an Authorization header. Logging kept.
-app.use('/uploads', httpLogger, express.static('uploads'));
->>>>>>> dcbd51e93552c210ffaf980439ff96060492508b
 app.use(errorLogger);
 // ERROR HANDLER
 // eslint-disable-next-line no-unused-vars
