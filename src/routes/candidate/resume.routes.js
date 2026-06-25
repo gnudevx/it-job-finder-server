@@ -25,7 +25,7 @@ router.post(
 router.get('/', verifyAccessToken, getResumes);
 
 // Xem CV inline preview
-router.get('/:id/view', viewResume);
+router.get('/:id/view', verifyAccessToken, viewResume);
 
 // Download CV
 router.get('/:id/download', verifyAccessToken, downloadResume);

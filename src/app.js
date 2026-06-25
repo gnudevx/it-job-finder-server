@@ -111,6 +111,9 @@ app.use('/api/jobs', jobsRouter);
 // Mount public recommend route before the global '/api' protected middleware
 app.use('/api/recommend', recommendRoutes);
 
+// Resume routes require auth and must be mounted before generic /api middleware
+app.use('/api/resumes', httpLogger, resumeRouter);
+
 app.use('/api', verifyAccessToken, httpLogger, aiRouter);
 app.use('/api/ai', httpLogger, aiRecommendRoutes);
 app.use('/api/jobs', jobsRouter);

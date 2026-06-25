@@ -14,11 +14,17 @@ export default cloudinary;
 export function createUploader({ folder, allowedFormats, fileSizeMB = 10 }) {
   const storage = new CloudinaryStorage({
     cloudinary,
-    params: async (req, file) => ({
-      folder,
-      allowed_formats: allowedFormats,
-      public_id: `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, '')}`,
-    }),
+    params: async (req, file) => {
+      const ext = file.originalname.split('.').pop().toLowerCase();
+      const isDocument = ['pdf', 'doc', 'docx'].includes(ext);
+
+      return {
+        folder,
+        allowed_formats: allowedFormats,
+        public_id: `${Date.now()}-${file.originalname.replace(/\.[^/.]+$/, '')}`,
+        resource_type: isDocument ? 'raw' : 'auto',
+      };
+    },
   });
 
   const fileFilter = (req, file, cb) => {

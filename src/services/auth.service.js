@@ -29,7 +29,7 @@ export const loginService = async ({ email, password }) => {
   await user.save({ validateBeforeSave: false });
 
   return {
-    message: 'Login successfully',
+    message: 'Đăng nhập thành công',
     accessToken,
     refreshToken,
     user,
@@ -81,7 +81,7 @@ export const googleLoginService = async (code) => {
 
   return {
     success: true,
-    message: 'Google login successfully',
+    message: 'Đăng nhập bằng Google thành công',
     accessToken,
     refreshToken,
     user,
@@ -146,7 +146,7 @@ export const registerService = async ({
   }
 
   return {
-    message: 'Register successfully',
+    message: 'Đăng ký thành công',
     user,
     candidate,
     employer,
