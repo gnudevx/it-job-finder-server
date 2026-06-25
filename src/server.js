@@ -24,11 +24,13 @@ const server = http.createServer(app);
 // Khởi tạo socket.io
 export const io = new SocketIO(server, {
   cors: {
-    origin: 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'https://it-job-finder-client-five.vercel.app',
+    ],
     credentials: true,
   },
 });
-
 app.set('io', io);
 // Socket events
 io.on('connection', (socket) => {
