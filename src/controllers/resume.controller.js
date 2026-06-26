@@ -1,4 +1,7 @@
+import { Readable } from 'node:stream';
 import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import {
   uploadResumeService,
   getResumesService,
@@ -73,21 +76,85 @@ export const setDefaultResume = async (req, res) => {
 
 export const viewResume = async (req, res) => {
   try {
-    const { resume, filePath } = await getResumeFileService(req.params.id);
+    const { resume } = await getResumeFileService(req.params.id);
 
-    const ext = resume.fileName.split('.').pop().toLowerCase();
-
-    if (ext === 'pdf') {
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', 'inline');
-
-      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-      res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-      res.setHeader('Cross-Origin-Opener-Policy', 'unsafe-none');
+    if (!resume.fileUrl) {
+      throw new Error('Không tìm thấy URL file CV');
     }
 
-    return fs.createReadStream(filePath).pipe(res);
+    const isLocalPath =
+      /^\//.test(resume.fileUrl) || !/^https?:\/\//i.test(resume.fileUrl);
+    let contentType = 'application/pdf';
+    let stream;
+    let localPath;
+
+    if (isLocalPath) {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      localPath = path.join(
+        __dirname,
+        '../../',
+        resume.fileUrl.replace(/^\//, ''),
+      );
+
+      if (!fs.existsSync(localPath)) {
+        throw new Error('File CV không tồn tại trên server');
+      }
+
+      const ext = path.extname(localPath).toLowerCase();
+      if (ext === '.pdf') contentType = 'application/pdf';
+      else if (ext === '.docx')
+        contentType =
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+      else if (ext === '.doc') contentType = 'application/msword';
+      else contentType = 'application/octet-stream';
+
+      stream = fs.createReadStream(localPath);
+    } else {
+      const remoteFile = await fetch(resume.fileUrl);
+      if (!remoteFile.ok) {
+        throw new Error('Không tải được file CV từ Cloudinary');
+      }
+
+      // Force PDF if the stored file name or type indicates PDF.
+      const isPdf =
+        /\.pdf$/i.test(resume.fileName) || resume.fileType === 'pdf';
+      contentType = isPdf
+        ? 'application/pdf'
+        : remoteFile.headers.get('content-type') || 'application/octet-stream';
+      stream = Readable.from(remoteFile.body);
+    }
+
+    res.setHeader('Content-Type', contentType);
+    // Explicit inline disposition with filename so browsers show PDF inline instead of downloading
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="${resume.fileName || 'resume'}"`,
+    );
+    // Set content-length when available to help browser rendering
+    if (isLocalPath) {
+      try {
+        const stat = fs.statSync(localPath);
+        if (stat && stat.size)
+          res.setHeader('Content-Length', String(stat.size));
+      } catch {
+        // ignore
+      }
+    } else {
+      try {
+        const remoteLen = (
+          await fetch(resume.fileUrl, { method: 'HEAD' })
+        ).headers.get('content-length');
+        if (remoteLen) res.setHeader('Content-Length', remoteLen);
+      } catch {
+        // ignore HEAD failure
+      }
+    }
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+
+    return stream.pipe(res);
   } catch (err) {
+    console.error(err);
     return res.status(500).json({
       message: err.message || 'View resume failed',
     });
@@ -96,9 +163,26 @@ export const viewResume = async (req, res) => {
 
 export const downloadResume = async (req, res) => {
   try {
-    const { resume, filePath } = await getResumeFileService(req.params.id);
+    const { resume } = await getResumeFileService(req.params.id);
+    if (!resume.fileUrl) {
+      throw new Error('Không tìm thấy URL file CV');
+    }
 
-    return res.download(filePath, resume.fileName);
+    const remoteFile = await fetch(resume.fileUrl);
+    if (!remoteFile.ok) {
+      throw new Error('Không tải được file CV từ Cloudinary');
+    }
+
+    res.setHeader(
+      'Content-Type',
+      remoteFile.headers.get('content-type') || 'application/octet-stream',
+    );
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${resume.fileName}"`,
+    );
+
+    return Readable.from(remoteFile.body).pipe(res);
   } catch (err) {
     console.error(err);
 
