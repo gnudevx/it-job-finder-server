@@ -44,7 +44,7 @@ export const getResumes = async (req, res) => {
 
 export const deleteResume = async (req, res) => {
   try {
-    await deleteResumeService(req.params.id);
+    await deleteResumeService(req.user.userId, req.params.id);
 
     return res.status(200).json({
       message: 'Xoá CV thành công',
@@ -60,7 +60,7 @@ export const deleteResume = async (req, res) => {
 
 export const setDefaultResume = async (req, res) => {
   try {
-    await setDefaultResumeService(req.user.id, req.params.id);
+    await setDefaultResumeService(req.user.userId, req.params.id);
 
     return res.status(200).json({
       message: 'Đã đặt CV mặc định',
