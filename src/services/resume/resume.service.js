@@ -1,4 +1,7 @@
+import fs from 'fs';
+import path from 'path';
 import Resume from '../../models/resumes.model.js';
+import ParsedResume from '../../models/ParsedResumeSchema.module.js';
 import candidateService from '../candidate.service.js';
 import cloudinary from '../../config/cloudinary.js';
 import { parseAndSaveResume } from '../parseResume.service.js';
@@ -39,9 +42,12 @@ export const uploadResumeService = async (userId, file) => {
     isDefault: false,
   });
 
-  parseAndSaveResume(newResume._id)
-    .then(() => console.log('Resume parsed successfully:', newResume._id))
-    .catch((err) => console.error('Resume parse failed:', err));
+  try {
+    await parseAndSaveResume(newResume._id);
+    console.log('Resume parsed successfully:', newResume._id);
+  } catch (err) {
+    console.error('Resume parse failed:', err);
+  }
 
   return newResume;
 };
@@ -54,20 +60,46 @@ export const getResumesService = async (userId) => {
   }).sort({ createdAt: -1 });
 };
 
-export const deleteResumeService = async (id) => {
-  const resume = await Resume.findById(id);
+export const deleteResumeService = async (userId, id) => {
+  const candidate = await candidateService.getMyInfo(userId);
+  if (!candidate) {
+    throw new Error('Candidate not found');
+  }
+
+  const resume = await Resume.findOne({ _id: id, candidateId: candidate._id });
 
   if (!resume) {
     throw new Error('CV không tồn tại');
   }
 
-  const publicId = resume.fileUrl
-    .split('/')
-    .slice(-2) // lấy folder/filename
-    .join('/')
-    .replace(/\.[^/.]+$/, ''); // bỏ extension
+  const publicId = resume.fileUrl?.includes('/upload/')
+    ? resume.fileUrl
+        .match(/\/upload\/(?:v\d+\/)?(.+)$/i)?.[1]
+        ?.replace(/\.[^/.]+$/, '')
+    : null;
 
-  await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+  if (publicId) {
+    try {
+      await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+    } catch (err) {
+      console.warn('Failed to remove CV file from Cloudinary:', err.message);
+    }
+  }
+
+  const localPath = resume.fileUrl?.startsWith('/')
+    ? path.join(process.cwd(), resume.fileUrl.replace(/^\//, ''))
+    : null;
+  if (localPath && fs.existsSync(localPath)) {
+    try {
+      await fs.promises.unlink(localPath);
+    } catch (err) {
+      console.warn('Failed to remove local CV file:', err.message);
+    }
+  }
+
+  await ParsedResume.deleteMany({ resumeId: resume._id });
+  await Resume.deleteOne({ _id: resume._id });
+
   return true;
 };
 
