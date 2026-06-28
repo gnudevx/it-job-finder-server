@@ -1,3 +1,4 @@
+import fs from 'fs';
 import Resume from '../models/resumes.model.js';
 import ParsedResume from '../models/ParsedResumeSchema.module.js';
 import { generateResumeEmbedding } from './resume/resumeEmbedding.js';
@@ -43,7 +44,10 @@ export async function parseAndSaveResume(resumeId) {
   if (!resume) throw new Error('Resume not found');
 
   // 3️⃣ Parse based on file type
-  const filePath = resolveUploadPath(resume.fileUrl);
+  const { filePath, isTemporary } = await resolveUploadPath(
+    resume.fileUrl,
+    resume.fileName,
+  );
   const rawText = await parseResumeByType(filePath, resume.fileType);
 
   // 4️⃣ Extract
@@ -74,6 +78,10 @@ export async function parseAndSaveResume(resumeId) {
     summary,
     shortSummary,
   });
+  if (isTemporary) {
+    await fs.promises.unlink(filePath).catch(() => {});
+  }
+
   // 6. Trigger Python embed — fire & forget, không await
   // Không block response về cho user, Python tự xử lý nền
   generateResumeEmbedding(resumeId).catch((err) =>

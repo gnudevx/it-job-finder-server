@@ -41,7 +41,7 @@ export const getResumes = async (req, res) => {
 
 export const deleteResume = async (req, res) => {
   try {
-    await deleteResumeService(req.params.id);
+    await deleteResumeService(req.user.userId, req.params.id);
 
     return res.status(200).json({
       message: 'Xoá CV thành công',
@@ -114,11 +114,11 @@ export const downloadResume = async (req, res) => {
 
     res.setHeader(
       'Content-Type',
-      remoteFile.headers.get('content-type') || 'application/octet-stream'
+      remoteFile.headers.get('content-type') || 'application/octet-stream',
     );
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${resume.fileName}"`
+      `attachment; filename="${resume.fileName}"`,
     );
 
     return Readable.from(remoteFile.body).pipe(res);
