@@ -24,10 +24,22 @@ const server = http.createServer(app);
 // Khởi tạo socket.io
 export const io = new SocketIO(server, {
   cors: {
-    origin: [
-      'http://localhost:3000',
-      'https://it-job-finder-client-five.vercel.app',
-    ],
+    origin: (origin, callback) => {
+      const allowed = [
+        'http://localhost:3000',
+        'https://it-job-finder-client-five.vercel.app',
+      ];
+
+      // Cho phép tất cả preview URL của Vercel project
+      const isVercelPreview =
+        /^https:\/\/it-job-finder-client-.*\.vercel\.app$/.test(origin);
+
+      if (!origin || allowed.includes(origin) || isVercelPreview) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   },
 });
