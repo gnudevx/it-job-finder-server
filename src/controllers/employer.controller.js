@@ -107,6 +107,42 @@ export const updatePersonalInfo = async (req, res) => {
   }
 };
 
+export const selectEmployerPackage = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { tier } = req.body;
+
+    if (!tier || !['FREE', 'PRO', 'ENTERPRISE'].includes(tier)) {
+      return res.status(400).json({ message: 'Gói không hợp lệ' });
+    }
+
+    const employer = await Employer.findOne({ userId });
+    if (!employer) {
+      return res.status(404).json({ message: 'Không tìm thấy employer!' });
+    }
+
+    employer.tier = tier;
+    if (tier === 'FREE') {
+      employer.subscriptionExpiresAt = null;
+    }
+    await employer.save();
+
+    await AccountActivity.create({
+      userId,
+      action: 'UPGRADE_PACKAGE',
+      meta: { tier, source: 'BUY_SERVICE' },
+    });
+
+    return res.json({
+      message: 'Đã cập nhật gói thành công',
+      user: employer,
+    });
+  } catch (err) {
+    console.error('Select package error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
+
 export const uploadLicenseController = async (req, res) => {
   try {
     const userId = req.user.userId;
