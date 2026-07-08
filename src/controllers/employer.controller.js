@@ -85,6 +85,11 @@ export const getMe = async (req, res) => {
 export const updatePersonalInfo = async (req, res) => {
   try {
     const data = req.body;
+    const isTierUpdate = Object.prototype.hasOwnProperty.call(data, 'tier');
+
+    if (data.tier === 'FREE') {
+      data.subscriptionExpiresAt = null;
+    }
 
     // Cập nhật thông tin employer dựa vào userId từ JWT
     const updated = await Employer.findOneAndUpdate(
@@ -94,7 +99,10 @@ export const updatePersonalInfo = async (req, res) => {
     );
     await AccountActivity.create({
       userId: req.user.userId,
-      action: 'UPDATE_PROFILE',
+      action: isTierUpdate ? 'UPGRADE_PACKAGE' : 'UPDATE_PROFILE',
+      meta: isTierUpdate
+        ? { tier: data.tier, source: 'PERSONAL_UPDATE' }
+        : undefined,
     });
     if (!updated) {
       return res.status(404).json({ message: 'Không tìm thấy employer!' });
