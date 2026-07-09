@@ -31,7 +31,7 @@ const GOOGLE_REDIRECT_URI = trimQuotes(process.env.GOOGLE_REDIRECT_URI);
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  'postmessage',
+  GOOGLE_REDIRECT_URI || `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`,
 );
 
 /* 1. LOGIN THƯỜNG */
@@ -60,9 +60,13 @@ export const loginService = async ({ email, password }) => {
 
 /* 2. GOOGLE LOGIN */
 export const googleLoginService = async (code) => {
+  const redirectUri =
+    GOOGLE_REDIRECT_URI ||
+    `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
+
   const { tokens } = await client.getToken({
     code,
-    redirect_uri: 'postmessage',
+    redirect_uri: redirectUri,
   });
 
   const ticket = await client.verifyIdToken({
