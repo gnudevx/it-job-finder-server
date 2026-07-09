@@ -6,17 +6,27 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 
+const trimQuotes = (value) => {
+  if (!value || typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+};
+
 const PROD_FRONTEND_ORIGIN =
-  process.env.CLIENT_URL ||
-  process.env.FRONTEND_ORIGIN ||
-  process.env.REACT_APP_FRONTEND_URL ||
+  trimQuotes(process.env.CLIENT_URL) ||
+  trimQuotes(process.env.FRONTEND_ORIGIN) ||
+  trimQuotes(process.env.REACT_APP_FRONTEND_URL) ||
   'https://it-job-finder-client-five.vercel.app';
 const PROD_BACKEND_ORIGIN =
-  process.env.BACKEND_ORIGIN ||
-  process.env.API_BASE_URL ||
-  process.env.REACT_APP_API_URL ||
-  process.env.REACT_APP_API_BASE_URL ||
+  trimQuotes(process.env.BACKEND_ORIGIN) ||
+  trimQuotes(process.env.API_BASE_URL) ||
+  trimQuotes(process.env.REACT_APP_API_URL) ||
+  trimQuotes(process.env.REACT_APP_API_BASE_URL) ||
   'https://it-job-finder-server.onrender.com';
+const GOOGLE_REDIRECT_URI = trimQuotes(process.env.GOOGLE_REDIRECT_URI);
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
@@ -102,7 +112,7 @@ export const googleLoginService = async (code) => {
 
 export const buildGoogleAuthUrl = () => {
   const redirectUri =
-    process.env.GOOGLE_REDIRECT_URI ||
+    GOOGLE_REDIRECT_URI ||
     `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
