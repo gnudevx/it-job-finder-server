@@ -3,6 +3,7 @@ import {
   getRecommendedJobs,
   getRecommendedCvs,
 } from '../controllers/recommend.controller.js';
+import { verifyAccessToken } from '../middlewares/auth.middleware.js';
 import { requireEmployerTier } from '../middlewares/requireEmployerTier.js';
 
 const router = express.Router();
@@ -12,6 +13,7 @@ router.get('/jobs/:jobId', getRecommendedJobs);
 // CV recommendations require authentication (employer access)
 router.get(
   '/jobs/:jobId/cvs',
+  verifyAccessToken,
   requireEmployerTier({
     allowedTiers: ['PRO', 'ENTERPRISE'],
     message:
