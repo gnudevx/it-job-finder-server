@@ -108,7 +108,9 @@ app.get('/auth/google/start', (req, res) => {
   res.redirect('/api/auth/google/start');
 });
 app.get('/auth/google/callback', (req, res) => {
-  res.redirect(`/api/auth/google/callback${req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : ''}`);
+  res.redirect(
+    `/api/auth/google/callback${req.originalUrl.includes('?') ? req.originalUrl.slice(req.originalUrl.indexOf('?')) : ''}`,
+  );
 });
 app.use('/api/auth', authRoutes);
 

@@ -9,7 +9,10 @@ import jwt from 'jsonwebtoken';
 const trimQuotes = (value) => {
   if (!value || typeof value !== 'string') return undefined;
   const trimmed = value.trim();
-  if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
     return trimmed.slice(1, -1).trim();
   }
   return trimmed;
@@ -61,8 +64,7 @@ export const loginService = async ({ email, password }) => {
 /* 2. GOOGLE LOGIN */
 export const googleLoginService = async (code) => {
   const redirectUri =
-    GOOGLE_REDIRECT_URI ||
-    `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
+    GOOGLE_REDIRECT_URI || `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
 
   const { tokens } = await client.getToken({
     code,
@@ -116,8 +118,7 @@ export const googleLoginService = async (code) => {
 
 export const buildGoogleAuthUrl = () => {
   const redirectUri =
-    GOOGLE_REDIRECT_URI ||
-    `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
+    GOOGLE_REDIRECT_URI || `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
