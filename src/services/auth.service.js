@@ -6,8 +6,17 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 
-const PROD_FRONTEND_ORIGIN = 'https://it-job-finder-client-five.vercel.app';
-const PROD_BACKEND_ORIGIN = 'https://it-job-finder-server.onrender.com';
+const PROD_FRONTEND_ORIGIN =
+  process.env.CLIENT_URL ||
+  process.env.FRONTEND_ORIGIN ||
+  process.env.REACT_APP_FRONTEND_URL ||
+  'https://it-job-finder-client-five.vercel.app';
+const PROD_BACKEND_ORIGIN =
+  process.env.BACKEND_ORIGIN ||
+  process.env.API_BASE_URL ||
+  process.env.REACT_APP_API_URL ||
+  process.env.REACT_APP_API_BASE_URL ||
+  'https://it-job-finder-server.onrender.com';
 
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
