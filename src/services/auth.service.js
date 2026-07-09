@@ -6,6 +6,9 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 
+const PROD_FRONTEND_ORIGIN = 'https://it-job-finder-client-five.vercel.app';
+const PROD_BACKEND_ORIGIN = 'https://it-job-finder-server.onrender.com';
+
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
@@ -86,6 +89,47 @@ export const googleLoginService = async (code) => {
     refreshToken,
     user,
   };
+};
+
+export const buildGoogleAuthUrl = () => {
+  const redirectUri = `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    access_type: 'offline',
+    prompt: 'consent',
+  });
+
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+};
+
+export const googleCallbackHtml = ({ accessToken, refreshToken, user }) => {
+  const payload = JSON.stringify({
+    success: true,
+    accessToken,
+    refreshToken,
+    user,
+  }).replace(/</g, '\\u003c');
+
+  return `<!doctype html>
+<html>
+  <head><meta charset="utf-8" /><title>Google Login</title></head>
+  <body>
+    <script>
+      (function () {
+        var message = ${payload};
+        if (window.opener) {
+          window.opener.postMessage({ type: 'google-auth-success', payload: message }, '${PROD_FRONTEND_ORIGIN}');
+          window.close();
+        } else {
+          document.body.innerText = 'Login completed. You can close this window.';
+        }
+      })();
+    </script>
+  </body>
+</html>`;
 };
 
 /* 3. REGISTER */
