@@ -101,7 +101,9 @@ export const googleLoginService = async (code) => {
 };
 
 export const buildGoogleAuthUrl = () => {
-  const redirectUri = `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
+  const redirectUri =
+    process.env.GOOGLE_REDIRECT_URI ||
+    `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
     redirect_uri: redirectUri,
