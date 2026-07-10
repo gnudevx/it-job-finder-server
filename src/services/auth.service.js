@@ -139,6 +139,12 @@ export const googleCallbackHtml = ({ accessToken, refreshToken, user }) => {
     user,
   }).replace(/</g, '\\u003c');
 
+  const GOOGLE_CALLBACK_TARGET_ORIGIN =
+    trimQuotes(process.env.GOOGLE_CALLBACK_TARGET_ORIGIN) ||
+    (process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : PROD_FRONTEND_ORIGIN);
+
   return `<!doctype html>
 <html>
   <head><meta charset="utf-8" /><title>Google Login</title></head>
@@ -147,7 +153,7 @@ export const googleCallbackHtml = ({ accessToken, refreshToken, user }) => {
       (function () {
         var message = ${payload};
         if (window.opener) {
-          window.opener.postMessage({ type: 'google-auth-success', payload: message }, '${PROD_FRONTEND_ORIGIN}');
+          window.opener.postMessage({ type: 'google-auth-success', payload: message }, '${GOOGLE_CALLBACK_TARGET_ORIGIN}');
           window.close();
         } else {
           document.body.innerText = 'Login completed. You can close this window.';
