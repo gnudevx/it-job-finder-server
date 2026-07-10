@@ -58,13 +58,14 @@ export const changePassword = async (req, res) => {
       });
     }
 
-    const user = await User.findById(req.user.userId).select('+password');
+    const user = await User.findById(req.user.userId).select('passwordHash');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (!user.passwordHash) {
-      return res
-        .status(400)
-        .json({ message: 'User không có passwordHash trong DB' });
+      return res.status(400).json({
+        message:
+          'Tài khoản này chưa có mật khẩu, vui lòng đăng nhập bằng Google hoặc đặt lại mật khẩu.',
+      });
     }
 
     // kiểm tra mật khẩu cũ
