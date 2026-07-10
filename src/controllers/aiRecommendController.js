@@ -11,7 +11,7 @@ const AI_CV_SERVICE_URL =
   process.env.AI_CV_SERVICE_URL || 'http://localhost:8002';
 
 export async function getRecommendations(req, res) {
-  const { jobDescription, topK = 5 } = req.body;
+  const { jobDescription, topK = 5, employerId } = req.body;
 
   if (!jobDescription || jobDescription.trim().length < 20) {
     return res.status(400).json({
@@ -23,7 +23,7 @@ export async function getRecommendations(req, res) {
   try {
     const { data } = await axios.post(
       `${AI_CV_SERVICE_URL}/recommend`,
-      { jobDescription, topK },
+      { jobDescription, topK, employerId },
       { timeout: 60_000 }, // embedding + reason generation có thể mất ~30s lần đầu
     );
 
