@@ -8,6 +8,10 @@ import User from '../models/User.js';
 import { generateAccessToken, generateRefreshToken } from '../utils/token.js';
 import AuthLog from '../models/authLog.model.js';
 import { cookieOptions } from '../utils/cookie.js';
+import {
+  buildGoogleAuthUrl,
+  googleCallbackHtml,
+} from '../services/auth.service.js';
 /* 1. LOGIN NORMAL */
 export const login = async (req, res, next) => {
   try {
@@ -62,6 +66,46 @@ export const googleLogin = async (req, res) => {
     return res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+};
+
+export const googleLoginStart = async (req, res) => {
+  try {
+    const authUrl = buildGoogleAuthUrl();
+    return res.redirect(authUrl);
+  } catch (error) {
+    return res.status(500).json({ error: error.message });
+  }
+};
+
+export const googleLoginCallback = async (req, res) => {
+  try {
+    const { code } = req.query;
+
+    if (!code) {
+      return res.status(400).send('Missing code');
+    }
+
+    const result = await googleLoginService(code);
+    const { accessToken, refreshToken, user } = result;
+
+    await User.findByIdAndUpdate(user._id, {
+      lastLogin: new Date(),
+    });
+
+    await AuthLog.create({
+      userId: user._id,
+      action: 'LOGIN',
+    });
+
+    res.cookie('refreshToken', refreshToken, cookieOptions(7 * 24 * 60 * 60));
+    res.cookie('accessToken', accessToken, cookieOptions(60 * 60));
+
+    return res
+      .type('html')
+      .send(googleCallbackHtml({ accessToken, refreshToken, user }));
+  } catch (error) {
+    return res.status(400).send(`<pre>${error.message}</pre>`);
   }
 };
 

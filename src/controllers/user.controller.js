@@ -3,8 +3,8 @@ import bcrypt from 'bcryptjs';
 
 export const getPersonalInfo = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select(
-      'fullName email phone role',
+    const user = await User.findById(req.user.userId).select(
+      'fullname email phone role',
     );
 
     if (!user) return res.status(404).json({ message: 'User not found' });
@@ -24,12 +24,13 @@ export const getPersonalInfo = async (req, res) => {
 export const updatePersonalInfo = async (req, res) => {
   try {
     const { fullName, phone } = req.body;
+    const normalizedName = fullName || req.body.fullname || '';
 
     const updatedUser = await User.findByIdAndUpdate(
-      req.user.id,
-      { fullName, phone },
+      req.user.userId,
+      { fullname: normalizedName, phone },
       { new: true },
-    ).select('fullName email phone role');
+    ).select('fullname email phone role');
 
     if (!updatedUser)
       return res.status(404).json({ message: 'User not found' });
@@ -51,13 +52,20 @@ export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 
-    const user = await User.findById(req.user.id).select('+password');
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: 'Mật khẩu hiện tại và mật khẩu mới không được để trống',
+      });
+    }
+
+    const user = await User.findById(req.user.userId).select('passwordHash');
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (!user.passwordHash) {
-      return res
-        .status(400)
-        .json({ message: 'User không có passwordHash trong DB' });
+      return res.status(400).json({
+        message:
+          'Tài khoản này chưa có mật khẩu, vui lòng đăng nhập bằng Google hoặc đặt lại mật khẩu.',
+      });
     }
 
     // kiểm tra mật khẩu cũ
@@ -67,11 +75,14 @@ export const changePassword = async (req, res) => {
         .status(400)
         .json({ message: 'Mật khẩu hiện tại không chính xác!' });
 
-    // hashing mật khẩu mới
-    const salt = await bcrypt.hash(newPassword, 10);
-    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    if (!user.fullname) {
+      user.fullname = user.email?.split('@')[0] || 'User';
+    }
 
-    await user.save();
+    // hashing mật khẩu mới
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+
+    await user.save({ validateBeforeSave: false });
 
     return res.json({
       success: true,

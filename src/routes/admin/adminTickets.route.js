@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getAdminTickets,
+  getTicketById,
   replyToTicket,
   changeTicketStatus,
 } from '../../controllers/adminTickets.controller.js';
@@ -11,6 +12,11 @@ const router = express.Router();
 // Lấy tất cả ticket (Support + Feedback)
 // ==========================
 router.get('/', getAdminTickets);
+
+// ==========================
+// Lấy chi tiết một ticket
+// ==========================
+router.get('/:ticketId', getTicketById);
 
 // ==========================
 // Admin phản hồi ticket

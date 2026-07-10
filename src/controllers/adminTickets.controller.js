@@ -43,6 +43,44 @@ export const getAdminTickets = async (req, res) => {
   }
 };
 
+// 2) Lấy chi tiết một ticket
+export const getTicketById = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+
+    // Try to find in SupportReport first
+    let ticket = await SupportReport.findById(ticketId).lean();
+    let type = 'SUPPORT';
+
+    // If not found, try in Feedback
+    if (!ticket) {
+      ticket = await Feedback.findById(ticketId).lean();
+      type = 'FEEDBACK';
+    }
+
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket không tồn tại' });
+    }
+
+    // Format response
+    const formattedTicket = {
+      id: ticket._id,
+      type,
+      title: type === 'SUPPORT' ? ticket.title : ticket.category,
+      content: type === 'SUPPORT' ? ticket.description : ticket.content,
+      files: ticket.files,
+      status: ticket.status,
+      createdAt: ticket.createdAt,
+      replies: ticket.replies,
+    };
+
+    res.json({ success: true, data: formattedTicket });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Không lấy được chi tiết ticket' });
+  }
+};
+
 export const replyToTicket = async (req, res) => {
   try {
     const { ticketId } = req.params;
@@ -63,7 +101,8 @@ export const replyToTicket = async (req, res) => {
     ticket.status = 'reviewing';
     console.log('Updated Ticket:', ticket);
     await ticket.save();
-    await Notification.create({
+
+    const notification = await Notification.create({
       title: `Phản hồi từ admin cho yêu cầu: ${ticket.category || ticket.title}`,
       message: content,
       type: 'SYSTEM',
@@ -71,6 +110,7 @@ export const replyToTicket = async (req, res) => {
       recipientId: ticket.employerId.toString(),
       createdBy: adminId,
     });
+
     const io = req.app.get('io');
     if (io) {
       io.to(`user:${ticket.employerId.toString()}`).emit(

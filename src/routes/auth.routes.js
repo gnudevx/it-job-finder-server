@@ -1,7 +1,12 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { refreshTokenController } from '../services/auth.service.js';
-import { login, googleLogin } from '../controllers/auth.controller.js';
+import {
+  login,
+  googleLogin,
+  googleLoginCallback,
+  googleLoginStart,
+} from '../controllers/auth.controller.js';
 import { register } from '../controllers/auth.controller.js';
 import AuthLog from '../models/authLog.model.js';
 import { getAuthLogs } from '../controllers/authLog.controller.js';
@@ -32,6 +37,8 @@ router.post('/logout', verifyAccessToken, async (req, res) => {
 });
 router.post('/register', register);
 // GOOGLE LOGIN
+router.get('/google/start', googleLoginStart);
+router.get('/google/callback', googleLoginCallback);
 router.post('/google', googleLogin);
 router.get('/logs', verifyAccessToken, getAuthLogs);
 export default router;

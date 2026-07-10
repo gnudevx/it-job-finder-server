@@ -6,10 +6,35 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt.js';
 import { OAuth2Client } from 'google-auth-library';
 import jwt from 'jsonwebtoken';
 
+const trimQuotes = (value) => {
+  if (!value || typeof value !== 'string') return undefined;
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+};
+
+const PROD_FRONTEND_ORIGIN =
+  trimQuotes(process.env.CLIENT_URL) ||
+  trimQuotes(process.env.FRONTEND_ORIGIN) ||
+  trimQuotes(process.env.REACT_APP_FRONTEND_URL) ||
+  'https://it-job-finder-client-five.vercel.app';
+const PROD_BACKEND_ORIGIN =
+  trimQuotes(process.env.BACKEND_ORIGIN) ||
+  trimQuotes(process.env.API_BASE_URL) ||
+  trimQuotes(process.env.REACT_APP_API_URL) ||
+  trimQuotes(process.env.REACT_APP_API_BASE_URL) ||
+  'https://it-job-finder-server.onrender.com';
+const GOOGLE_REDIRECT_URI = trimQuotes(process.env.GOOGLE_REDIRECT_URI);
+
 const client = new OAuth2Client(
   process.env.GOOGLE_CLIENT_ID,
   process.env.GOOGLE_CLIENT_SECRET,
-  'postmessage',
+  GOOGLE_REDIRECT_URI || `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`,
 );
 
 /* 1. LOGIN THƯỜNG */
@@ -38,9 +63,12 @@ export const loginService = async ({ email, password }) => {
 
 /* 2. GOOGLE LOGIN */
 export const googleLoginService = async (code) => {
+  const redirectUri =
+    GOOGLE_REDIRECT_URI || `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
+
   const { tokens } = await client.getToken({
     code,
-    redirect_uri: 'postmessage',
+    redirect_uri: redirectUri,
   });
 
   const ticket = await client.verifyIdToken({
@@ -86,6 +114,54 @@ export const googleLoginService = async (code) => {
     refreshToken,
     user,
   };
+};
+
+export const buildGoogleAuthUrl = () => {
+  const redirectUri =
+    GOOGLE_REDIRECT_URI || `${PROD_BACKEND_ORIGIN}/api/auth/google/callback`;
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID,
+    redirect_uri: redirectUri,
+    response_type: 'code',
+    scope: 'openid email profile',
+    access_type: 'offline',
+    prompt: 'consent',
+  });
+
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+};
+
+export const googleCallbackHtml = ({ accessToken, refreshToken, user }) => {
+  const payload = JSON.stringify({
+    success: true,
+    accessToken,
+    refreshToken,
+    user,
+  }).replace(/</g, '\\u003c');
+
+  const GOOGLE_CALLBACK_TARGET_ORIGIN =
+    trimQuotes(process.env.GOOGLE_CALLBACK_TARGET_ORIGIN) ||
+    (process.env.NODE_ENV === 'development'
+      ? 'http://localhost:3000'
+      : PROD_FRONTEND_ORIGIN);
+
+  return `<!doctype html>
+<html>
+  <head><meta charset="utf-8" /><title>Google Login</title></head>
+  <body>
+    <script>
+      (function () {
+        var message = ${payload};
+        if (window.opener) {
+          window.opener.postMessage({ type: 'google-auth-success', payload: message }, '${GOOGLE_CALLBACK_TARGET_ORIGIN}');
+          window.close();
+        } else {
+          document.body.innerText = 'Login completed. You can close this window.';
+        }
+      })();
+    </script>
+  </body>
+</html>`;
 };
 
 /* 3. REGISTER */
