@@ -85,11 +85,6 @@ export const getMe = async (req, res) => {
 export const updatePersonalInfo = async (req, res) => {
   try {
     const data = req.body;
-    const isTierUpdate = Object.prototype.hasOwnProperty.call(data, 'tier');
-
-    if (data.tier === 'FREE') {
-      data.subscriptionExpiresAt = null;
-    }
 
     // Cập nhật thông tin employer dựa vào userId từ JWT
     const updated = await Employer.findOneAndUpdate(
@@ -99,10 +94,7 @@ export const updatePersonalInfo = async (req, res) => {
     );
     await AccountActivity.create({
       userId: req.user.userId,
-      action: isTierUpdate ? 'UPGRADE_PACKAGE' : 'UPDATE_PROFILE',
-      meta: isTierUpdate
-        ? { tier: data.tier, source: 'PERSONAL_UPDATE' }
-        : undefined,
+      action: 'UPDATE_PROFILE',
     });
     if (!updated) {
       return res.status(404).json({ message: 'Không tìm thấy employer!' });
@@ -111,42 +103,6 @@ export const updatePersonalInfo = async (req, res) => {
     return res.json({ message: 'Cập nhật thành công!', user: updated });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ message: 'Server error' });
-  }
-};
-
-export const selectEmployerPackage = async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { tier } = req.body;
-
-    if (!tier || !['FREE', 'PRO', 'ENTERPRISE'].includes(tier)) {
-      return res.status(400).json({ message: 'Gói không hợp lệ' });
-    }
-
-    const employer = await Employer.findOne({ userId });
-    if (!employer) {
-      return res.status(404).json({ message: 'Không tìm thấy employer!' });
-    }
-
-    employer.tier = tier;
-    if (tier === 'FREE') {
-      employer.subscriptionExpiresAt = null;
-    }
-    await employer.save();
-
-    await AccountActivity.create({
-      userId,
-      action: 'UPGRADE_PACKAGE',
-      meta: { tier, source: 'BUY_SERVICE' },
-    });
-
-    return res.json({
-      message: 'Đã cập nhật gói thành công',
-      user: employer,
-    });
-  } catch (err) {
-    console.error('Select package error:', err);
     return res.status(500).json({ message: 'Server error' });
   }
 };
