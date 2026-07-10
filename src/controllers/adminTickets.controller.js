@@ -3,6 +3,20 @@ import Feedback from '../models/Feedback.module.js';
 import Notification from '../models/notification.model.js';
 import mongoose from 'mongoose';
 
+// 🔗 Ghép domain backend vào đường dẫn file tương đối lưu trong DB
+// (fileUrl lưu dạng "/uploads/feedback/xxx", cần domain đầy đủ để client mở đúng file)
+const buildFileUrl = (req, url) => {
+  if (!url) return url;
+  if (/^https?:\/\//i.test(url)) return url; // đã là URL tuyệt đối thì giữ nguyên
+  return `${req.protocol}://${req.get('host')}${url}`;
+};
+
+const withAbsoluteFileUrls = (req, files = []) =>
+  (files || []).map((f) => ({
+    ...f,
+    fileUrl: buildFileUrl(req, f.fileUrl),
+  }));
+
 // 1) Lấy toàn bộ ticket
 
 export const getAdminTickets = async (req, res) => {
@@ -15,7 +29,7 @@ export const getAdminTickets = async (req, res) => {
       type: 'SUPPORT',
       title: t.title,
       content: t.description,
-      files: t.files,
+      files: withAbsoluteFileUrls(req, t.files),
       status: t.status,
       createdAt: t.createdAt,
       replies: t.replies,
@@ -26,7 +40,7 @@ export const getAdminTickets = async (req, res) => {
       type: 'FEEDBACK',
       title: t.category,
       content: t.content,
-      files: t.files,
+      files: withAbsoluteFileUrls(req, t.files),
       status: t.status,
       createdAt: t.createdAt,
       replies: t.replies,
@@ -68,7 +82,7 @@ export const getTicketById = async (req, res) => {
       type,
       title: type === 'SUPPORT' ? ticket.title : ticket.category,
       content: type === 'SUPPORT' ? ticket.description : ticket.content,
-      files: ticket.files,
+      files: withAbsoluteFileUrls(req, ticket.files),
       status: ticket.status,
       createdAt: ticket.createdAt,
       replies: ticket.replies,
