@@ -58,19 +58,32 @@ export const getMyInfo = async (req, res) => {
 // Update my profile
 export const updateCandidate = async (req, res) => {
   try {
-    const candidateId = req.params.id;
+    const userId = req.user.userId;
     const updates = req.body;
 
-    const candidate = await candidateService.updateCandidate(
-      candidateId,
-      updates,
-    );
-
+    // Find candidate by userId
+    const candidate = await candidateService.getMyInfo(userId);
     if (!candidate) {
       return res.status(404).json({ message: 'Không tìm thấy hồ sơ ứng viên' });
     }
 
-    Object.assign(candidate, updates);
+    // Update allowed fields only
+    const allowedFields = [
+      'fullName',
+      'email',
+      'phone',
+      'address',
+      'birthday',
+      'gender',
+      'avatar',
+    ];
+
+    allowedFields.forEach((field) => {
+      if (updates[field] !== undefined) {
+        candidate[field] = updates[field];
+      }
+    });
+
     await candidate.save();
 
     return res.json({
