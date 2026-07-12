@@ -4,12 +4,33 @@
 import express from 'express';
 import axios from 'axios';
 import FormData from 'form-data';
+import mongoose from 'mongoose';
 
 const router = express.Router();
 const FASTAPI_URL = process.env.FASTAPI_URL || 'http://localhost:8000';
 
 import multer from 'multer';
 const upload = multer({ storage: multer.memoryStorage() }); // giữ file trong RAM
+
+// ── Kết nối Database MongoDB riêng của Chatbot ─────────────────────────────────
+let chatbotDbConnection = null;
+
+const getChatbotDb = () => {
+  if (chatbotDbConnection) return chatbotDbConnection;
+
+  const uri = process.env.CHATBOT_MONGO_URI;
+  const dbName = process.env.CHATBOT_MONGO_DB || 'cv_chatbot';
+
+  if (!uri) {
+    throw new Error('CHATBOT_MONGO_URI is not defined in environment variables');
+  }
+
+  chatbotDbConnection = mongoose.createConnection(uri, {
+    dbName: dbName,
+  });
+
+  return chatbotDbConnection;
+};
 
 // ── Helper: forward request sang FastAPI ──────────────────────────────────────
 const forwardToFastAPI = async (path, method, body, userId) => {
@@ -71,34 +92,90 @@ router.post('/chat', async (req, res) => {
 });
 
 // ── GET /api/ai/chat/history/:sessionId ──────────────────────────────────────
+// Đọc trực tiếp từ MongoDB chatbot — KHÔNG cần Render FastAPI wake up
 router.get('/chat/history/:sessionId', async (req, res) => {
   try {
-    const { status, data } = await forwardToFastAPI(
-      `/api/chat/history/${req.params.sessionId}`,
-      'GET',
-      null,
-      req.user.userId,
-    );
-    return res.status(status).json(data);
+    const connection = getChatbotDb();
+    const db = connection.db;
+
+    const userId = req.user.userId;
+    const rawSession = req.params.sessionId;
+
+    // Resolve session_id theo cùng logic Python:
+    // resolve_session_id → "user:{userId}:{rawSession}" hoặc "user:{userId}:default"
+    let sessionId;
+    if (!rawSession || ['null', 'undefined', 'default', 'none'].includes(rawSession.toLowerCase())) {
+      sessionId = `user:${userId}:default`;
+    } else if (rawSession.startsWith('user:')) {
+      sessionId = rawSession;
+    } else {
+      sessionId = `user:${userId}:${rawSession}`;
+    }
+
+    const messages = await db
+      .collection('chat_history')
+      .find(
+        { session_id: sessionId, user_id: userId },
+        { projection: { _id: 0, role: 1, content: 1, created_at: 1 } }
+      )
+      .sort({ created_at: 1 }) // cũ → mới
+      .limit(50)
+      .toArray();
+
+    return res.status(200).json({
+      session_id: sessionId,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      count: messages.length,
+    });
   } catch (err) {
-    return res.status(502).json({ message: 'Lỗi kết nối AI service', err });
+    console.error('Chat history error:', err);
+    return res.status(500).json({ message: 'Lỗi lấy lịch sử chat', err });
   }
 });
 
 // ── DELETE /api/ai/chat/history/:sessionId ────────────────────────────────────
+// Xóa history trực tiếp từ MongoDB chatbot + forward sang Render để đồng bộ session state
 router.delete('/chat/history/:sessionId', async (req, res) => {
   try {
-    const { status, data } = await forwardToFastAPI(
-      `/api/chat/history/${req.params.sessionId}`,
-      'DELETE',
-      null,
-      req.user.userId,
-    );
-    return res.status(status).json(data);
+    const connection = getChatbotDb();
+    const db = connection.db;
+
+    const userId = req.user.userId;
+    const rawSession = req.params.sessionId;
+
+    let sessionId;
+    if (!rawSession || ['null', 'undefined', 'default', 'none'].includes(rawSession.toLowerCase())) {
+      sessionId = `user:${userId}:default`;
+    } else if (rawSession.startsWith('user:')) {
+      sessionId = rawSession;
+    } else {
+      sessionId = `user:${userId}:${rawSession}`;
+    }
+
+    // Xóa messages từ MongoDB trực tiếp
+    await db.collection('chat_history').deleteMany({ session_id: sessionId, user_id: userId });
+
+    // Cố gắng đồng bộ session state trên Render (mark_session_cleared)
+    // Nếu Render đang ngủ thì bỏ qua — không block response
+    try {
+      await forwardToFastAPI(
+        `/api/chat/history/${req.params.sessionId}`,
+        'DELETE',
+        null,
+        userId,
+      );
+    } catch (_) {
+      // Render offline → không sao, history đã xóa khỏi MongoDB rồi
+    }
+
+    return res.status(200).json({ message: 'Đã xóa lịch sử', session_id: sessionId });
   } catch (err) {
-    return res.status(502).json({ message: 'Lỗi kết nối AI service', err });
+    console.error('Delete history error:', err);
+    return res.status(500).json({ message: 'Lỗi xóa lịch sử chat', err });
   }
 });
+
+
 
 // ── GET /api/ai/tokens ────────────────────────────────────────────────────────
 router.get('/tokens', async (req, res) => {
