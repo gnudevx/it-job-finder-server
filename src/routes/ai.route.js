@@ -15,8 +15,14 @@ const upload = multer({ storage: multer.memoryStorage() }); // giữ file trong 
 // ── Kết nối Database MongoDB riêng của Chatbot ─────────────────────────────────
 let chatbotDbConnection = null;
 
-const getChatbotDb = () => {
-  if (chatbotDbConnection) return chatbotDbConnection;
+const getChatbotDb = async () => {
+  if (chatbotDbConnection) {
+    if (chatbotDbConnection.readyState === 1) return chatbotDbConnection;
+    if (chatbotDbConnection.readyState === 2) {
+      await new Promise((resolve) => chatbotDbConnection.once('connected', resolve));
+      return chatbotDbConnection;
+    }
+  }
 
   const uri = process.env.CHATBOT_MONGO_URI;
   const dbName = process.env.CHATBOT_MONGO_DB || 'cv_chatbot';
@@ -27,6 +33,15 @@ const getChatbotDb = () => {
 
   chatbotDbConnection = mongoose.createConnection(uri, {
     dbName: dbName,
+  });
+
+  await new Promise((resolve, reject) => {
+    chatbotDbConnection.once('connected', () => {
+      resolve();
+    });
+    chatbotDbConnection.once('error', (err) => {
+      reject(err);
+    });
   });
 
   return chatbotDbConnection;
@@ -95,7 +110,49 @@ router.post('/chat', async (req, res) => {
 // Đọc trực tiếp từ MongoDB chatbot — KHÔNG cần Render FastAPI wake up
 router.get('/chat/history/:sessionId', async (req, res) => {
   try {
-    const connection = getChatbotDb();
+    const connection = await getChatbotDb();
+    const db = connection.db;
+
+    const userId = req.user.userId;
+    const rawSession = req.params.sessionId;
+
+    // Resolve session_id theo cùng logic Python:
+    // resolve_session_id → "user:{userId}:{rawSession}" hoặc "user:{userId}:default"
+    let sessionId;
+    if (!rawSession || ['null', 'undefined', 'default', 'none'].includes(rawSession.toLowerCase())) {
+      sessionId = `user:${userId}:default`;
+    } else if (rawSession.startsWith('user:')) {
+      sessionId = rawSession;
+    } else {
+      sessionId = `user:${userId}:${rawSession}`;
+    }
+
+    const messages = await db
+      .collection('chat_history')
+      .find(
+        { session_id: sessionId, user_id: userId },
+        { projection: { _id: 0, role: 1, content: 1, created_at: 1 } }
+      )
+      .sort({ created_at: 1 }) // cũ → mới
+      .limit(50)
+      .toArray();
+
+    return res.status(200).json({
+      session_id: sessionId,
+      messages: messages.map((m) => ({ role: m.role, content: m.content })),
+      count: messages.length,
+    });
+  } catch (err) {
+    console.error('Chat history error:', err);
+    return res.status(500).json({ message: 'Lỗi lấy lịch sử chat', err });
+  }
+});
+
+// ── DELETE /api/ai/chat/history/:sessionId ────────────────────────────────────
+// Xóa history trực tiếp từ MongoDB chatbot + forward sang Render để đồng bộ session state
+router.delete('/chat/history/:sessionId', async (req, res) => {
+  try {
+    const connection = await getChatbotDb();
     const db = connection.db;
 
     const userId = req.user.userId;
