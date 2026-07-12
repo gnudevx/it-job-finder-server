@@ -317,6 +317,29 @@ export const getAllJobsHistory = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Return only active jobs (approved + visible) for employer CV-recommendation dropdown
+export const getActiveJobsForEmployer = async (req, res) => {
+  try {
+    const employerUserId = req.user.userId;
+    const employer = await Employer.findOne({ userId: employerUserId });
+    if (!employer || !employer._id) {
+      return res.status(400).json({ success: false, message: 'Missing employer_id' });
+    }
+
+    const jobs = await Job.find({
+      employer_id: employer._id,
+      publishStatus: 'approved',
+      visibility: 'visible',
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return res.json({ success: true, data: jobs });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
 export const pauseJob = async (req, res) => {
   try {
     const jobId = req.params.id;

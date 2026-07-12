@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post('/create', validateJob, controller.createJob);
 router.get('/getHistoryEmployer', controller.getAllJobsHistory);
+router.get('/getHistoryEmployer/active', controller.getActiveJobsForEmployer);
 router.put('/edit/:id', controller.updateJob);
 router.post('/:id/pause', controller.pauseJob);
 router.post('/:id/resume', controller.resumeJob);
